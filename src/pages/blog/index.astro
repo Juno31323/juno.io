@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/cms.css';
+---
+<BaseLayout title="글" description="개발하며 남긴 메모와 연구 기록.">
+  <header class="page-header"><h1>글<span class="accent-dot">.</span></h1><p class="page-lead">개발하며 남긴 메모와 연구 기록.</p></header>
+  <section class="blog-content" data-blog aria-label="글 목록">
+    <label class="search-field">글 검색<input type="search" id="blog-search" placeholder="제목으로 검색" maxlength="100" /></label>
+    <p class="cms-feedback" data-blog-status role="status">글을 불러오는 중입니다.</p>
+    <ul class="blog-list" data-blog-list></ul>
+    <button class="outline-link" data-blog-more hidden>더 보기</button>
+    <noscript><p>글 목록을 보려면 JavaScript를 켜 주세요.</p></noscript>
+  </section>
+</BaseLayout>

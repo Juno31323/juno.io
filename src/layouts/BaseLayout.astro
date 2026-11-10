@@ -1,0 +1,81 @@
+---
+import '../styles/global.css';
+import { profile } from '../data/profile';
+import Arrow from '../components/Arrow.astro';
+interface Props { title?: string; description?: string; noindex?: boolean; }
+const { title, description = '안산대학교 인공지능소프트웨어학과 민준호. 백엔드·앱 프로젝트와 대학 공지 RAG 연구.' } = Astro.props;
+const pageTitle = title ? `${title} — ${profile.name}` : `${profile.name} — 백엔드 · 앱 · RAG`;
+const prefix = import.meta.env.BASE_URL.replace(/\/$/, '');
+const path = prefix && Astro.url.pathname.startsWith(prefix + '/') ? Astro.url.pathname.slice(prefix.length) : Astro.url.pathname;
+const nav = [
+  { href: '/about/', label: '저에 대해' },
+  { href: '/projects/', label: '만든 것들' },
+  { href: '/research/', label: '연구와 발표' },
+  { href: '/timeline/', label: '전체 이력' },
+  { href: '/blog/', label: '글' },
+];
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#FFFFFF" />
+    {Astro.props.noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <title>{pageTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" href="/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="wordmark" href="/" aria-label="민준호 홈">{profile.name}</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" hidden><span class="menu-label">메뉴 열기</span><span class="menu-icon" aria-hidden="true"><i></i><i></i></span></button>
+        <nav id="primary-navigation" class="primary-nav" aria-label="주 메뉴">
+          {nav.map(item => <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>)}
+        </nav>
+      </header>
+      <main id="main" tabindex="-1"><slot /></main>
+      <footer class="site-footer">
+        <a class="footer-name" href="/">민준호<span aria-hidden="true">.</span></a>
+        <p>안산대학교<br class="mobile-only" /> 인공지능소프트웨어학과</p>
+        <div class="footer-links">{profile.links.map(link => <a href={link.url} target="_blank" rel="noopener noreferrer">{link.label} <Arrow direction="external" /></a>)}<a href="/admin/">관리</a><a href="#main">맨 위로 <Arrow direction="up" /></a></div>
+      </footer>
+    </div>
+    <script>
+      const button = document.querySelector<HTMLButtonElement>('.menu-toggle');
+      const nav = document.querySelector<HTMLElement>('#primary-navigation');
+      const label = button?.querySelector('.menu-label');
+      if (button && nav && label) {
+        button.hidden = false;
+        document.documentElement.classList.add('menu-ready');
+        const setOpen = (open: boolean) => {
+          button.setAttribute('aria-expanded', String(open));
+          nav.classList.toggle('is-open', open);
+          label.textContent = open ? '메뉴 닫기' : '메뉴 열기';
+        };
+        button.addEventListener('click', () => setOpen(button.getAttribute('aria-expanded') !== 'true'));
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && button.getAttribute('aria-expanded') === 'true') {
+            setOpen(false);
+            button.focus();
+          }
+        });
+        document.addEventListener('click', event => {
+          if (event.target instanceof Node && !nav.contains(event.target) && !button.contains(event.target)) setOpen(false);
+        });
+        nav.addEventListener('focusout', event => {
+          if (event.relatedTarget instanceof Node && !nav.contains(event.relatedTarget) && !button.contains(event.relatedTarget)) setOpen(false);
+        });
+        nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setOpen(false)));
+        window.matchMedia('(min-width: 761px)').addEventListener('change', () => setOpen(false));
+      }
+    </script>
+    <script>import '../scripts/public-content';</script>
+  </body>
+</html>

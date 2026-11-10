@@ -1,0 +1,9 @@
+---
+import { getCollection } from 'astro:content';
+import WorkLayout from '../../layouts/WorkLayout.astro';
+export async function getStaticPaths() {
+  return (await getCollection('research')).map(work => ({ params: { slug: work.id }, props: { work } }));
+}
+const { work } = Astro.props;
+---
+<WorkLayout work={work} />

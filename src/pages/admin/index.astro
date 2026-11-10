@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/cms.css';
+---
+<BaseLayout title="사이트 관리" description="민준호의 사이트 관리." noindex>
+  <div class="admin-shell">
+    <header class="admin-heading"><div><h1>사이트 관리</h1><p>글을 쓰고, 작업과 소개를 다듬는 곳.</p></div><button id="logout" class="outline-link" hidden>로그아웃</button></header>
+    <p id="admin-status" class="cms-feedback" role="status" aria-live="polite">로그인 상태를 확인하고 있습니다.</p>
+    <section id="login-panel" class="login-panel" hidden aria-labelledby="login-title">
+      <h2 id="login-title">관리자 로그인</h2>
+      <form id="login-form" class="cms-form">
+        <label>이메일<input type="email" name="email" autocomplete="username" required /></label>
+        <label>비밀번호<input type="password" name="password" autocomplete="current-password" required /></label>
+        <button class="button-link" type="submit">로그인</button>
+      </form>
+      <p class="cms-help">등록된 관리자 계정으로 로그인해 주세요.</p>
+    </section>
+    <section id="workspace" hidden aria-label="콘텐츠 관리">
+      <div class="admin-toolbar"><label>관리할 내용<select id="content-kind"><option value="posts">블로그 글</option><option value="projects">프로젝트</option><option value="research">연구와 발표</option><option value="timeline">이력</option><option value="pages">소개</option><option value="profile">프로필·홈</option></select></label><button id="new-entry" class="button-link">새 글 쓰기</button><button id="export-data" class="text-link">데이터 백업</button></div>
+      <div id="entry-workspace" class="admin-columns">
+        <aside class="entry-sidebar" aria-label="내 기록"><label>목록 검색<input type="search" id="admin-search" placeholder="제목 검색" /></label><p id="entry-count" class="cms-help"></p><ul id="admin-entries"></ul></aside>
+        <section class="editor-panel" aria-labelledby="editor-title">
+          <h2 id="editor-title">새 글</h2>
+          <form id="entry-form" class="cms-form">
+            <label>제목<input name="title" maxlength="200" required /></label>
+            <div class="field-pair"><label>주소 이름<input name="slug" pattern="[a-z0-9][a-z0-9-]{0,99}" maxlength="100" placeholder="my-first-post" required /><span class="cms-help">영문 소문자·숫자·하이픈</span></label><label>공개 상태<select name="status"><option value="draft">초안</option><option value="published">공개</option><option value="archived">보관</option></select></label></div>
+            <label>짧은 설명<textarea name="summary" rows="2" maxlength="1000"></textarea></label>
+            <div class="field-pair"><label>발행일<input type="datetime-local" name="published_at" required /><span class="cms-help">현재 기기의 시간대. 미래 시각이면 예약 발행됩니다.</span></label><label>정렬 순서<input type="number" name="sort_order" value="0" min="-2147483648" max="2147483647" step="1" /></label></div>
+            <fieldset id="work-fields"><legend>작업·이력 정보</legend><div class="field-pair"><label>분야<input name="category" /></label><label>기간<input name="period" placeholder="2026.03–" /></label><label>맡은 일<input name="role" /></label><label>진행 상태<input name="work_status" /></label></div><label class="check-field"><input type="checkbox" name="featured" /> 홈에서 강조하기 (순서대로 최대 3개)</label><label>목록 이미지 URL<input name="cardImage" type="text" placeholder="https://… 또는 /images/…" /></label><label>이미지 설명<input name="cardAlt" /></label><label>관련 링크<textarea name="links" rows="2" placeholder="GitHub | https://github.com/…"></textarea><span class="cms-help">한 줄에 하나씩: 이름 | URL</span></label></fieldset>
+            <div class="editor-tabs" role="group" aria-label="본문 보기"><button type="button" id="edit-tab" aria-pressed="true">작성</button><button type="button" id="preview-tab" aria-pressed="false">미리보기</button></div>
+            <label id="body-label">본문 (Markdown)<textarea name="body" id="entry-body" rows="18" maxlength="200000" placeholder="## 오늘의 기록&#10;&#10;짧게 남겨 보세요."></textarea></label>
+            <article id="body-preview" class="prose markdown-preview" hidden aria-label="본문 미리보기"></article>
+            <div class="image-tools"><label>본문 이미지 추가<input type="file" id="image-upload" accept="image/jpeg,image/png,image/webp,image/avif" /></label><label>이미지 설명<input id="image-alt" placeholder="이미지에 담긴 내용" /></label><button type="button" id="upload-image" class="outline-link">업로드·본문에 넣기</button><p class="cms-help">JPG·PNG·WebP·AVIF, 5MB까지</p></div>
+            <p id="editor-feedback" class="cms-feedback" aria-live="off"></p>
+            <div class="editor-actions"><button class="button-link" type="submit" id="save-entry">저장</button><a id="view-entry" class="text-link" target="_blank" rel="noopener" hidden>공개 글 보기</a><span id="saved-at" class="cms-help"></span></div>
+            <p class="cms-help">보관한 글은 방문자에게 보이지 않습니다. 목록에서 다시 열어 복원할 수 있습니다.</p>
+          </form>
+        </section>
+      </div>
+      <section id="profile-panel" hidden aria-labelledby="profile-title"><h2 id="profile-title">프로필·홈</h2><form id="profile-form" class="cms-form profile-form">
+        <div class="field-pair"><label>이름<input name="name" required maxlength="80" /></label><label>학교<input name="school" required maxlength="120" /></label></div><label>학과<input name="major" required maxlength="120" /></label><label>한 줄 소개<textarea name="intro" rows="2" required maxlength="400"></textarea></label><label>GitHub URL<input type="url" name="github" required /></label><label>홈 사진 URL<input name="heroPhoto" required /></label><label>소개 사진 URL<input name="photo" required /></label><label>사진 설명<input name="photoAlt" required maxlength="300" /></label><label>홈 연구 요약<textarea name="researchSummary" rows="2" maxlength="1000"></textarea></label><label>관심과 학습 계획 (Markdown)<textarea name="interests" rows="6" maxlength="5000"></textarea></label><p class="cms-help">사진은 글 편집 화면에서 업로드한 URL을 붙여 넣을 수도 있습니다.</p><button type="submit" class="button-link">프로필 저장</button>
+        <p id="profile-feedback" class="cms-feedback" aria-live="off"></p>
+      </form></section>
+    </section>
+    <noscript><p>관리자 화면을 사용하려면 JavaScript를 켜 주세요.</p></noscript>
+  </div>
+  <script>import '../../scripts/admin';</script>
+</BaseLayout>

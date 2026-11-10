@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 575" preserveAspectRatio="none">
+  <defs><linearGradient id="lavender" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9e9fc"/><stop offset=".6" stop-color="#eeedfc"/><stop offset="1" stop-color="#e7e9fc"/></linearGradient></defs>
+  <path d="M 0 63 C 0 19 35 -1 86 5 C 175 17 247 26 305 17 C 337 12 350 32 350 70 L 350 492 C 350 549 330 578 274 571 C 194 563 149 564 80 573 C 20 581 0 551 0 505 Z" fill="url(#lavender)"/>
+</svg>

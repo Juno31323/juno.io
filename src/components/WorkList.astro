@@ -1,0 +1,17 @@
+---
+import Arrow from './Arrow.astro';
+import { workHref, type Work } from '../lib/works';
+interface Props { works: Work[]; }
+const { works } = Astro.props;
+---
+<ul class="work-list">
+  {works.map(work => (
+    <li>
+      <a class="work-row" href={workHref(work)}>
+        <div class="work-main"><h3>{work.data.title}</h3>{work.data.showSummary && <p>{work.data.summary}</p>}</div>
+        <div class="work-meta"><span class="work-category">{work.data.category}</span>{work.data.listRole && <span>{work.data.listRole}</span>}{work.data.status && <span>{work.data.status}</span>}</div>
+        <span class="work-arrow"><Arrow /></span>
+      </a>
+    </li>
+  ))}
+</ul>

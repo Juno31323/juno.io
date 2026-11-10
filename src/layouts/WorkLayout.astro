@@ -1,0 +1,21 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import Arrow from '../components/Arrow.astro';
+import type { Work } from '../lib/works';
+interface Props { work: Work; }
+const { work } = Astro.props;
+const { Content } = await render(work);
+const isResearch = work.collection === 'research';
+---
+<BaseLayout title={work.data.title} description={work.data.summary}>
+  <header class="detail-header" data-work-id={work.id} data-work-kind={work.collection}>
+    <a class="back-link" href={isResearch ? '/research/' : '/projects/'}><Arrow direction="left" /> {isResearch ? '연구와 발표' : '만든 것들'}</a>
+    <h1>{work.data.title}</h1>
+    <p class="detail-summary">{work.data.summary}</p>
+    <dl class="detail-meta"><div><dt>분야</dt><dd>{work.data.category}</dd></div><div><dt>맡은 일</dt><dd>{work.data.role}</dd></div>{work.data.period && <div><dt>기간</dt><dd>{work.data.period}</dd></div>}{work.data.status && <div><dt>상태</dt><dd>{work.data.status}</dd></div>}</dl>
+  </header>
+  {work.data.image && <figure class="work-image"><img src={work.data.image.src} alt={work.data.image.alt} /></figure>}
+  <div class="article-layout work-article"><article class="prose"><Content />{work.data.links.length > 0 && <div class="resource-links" aria-label="관련 자료">{work.data.links.map(link => <a class="text-link" href={link.url} target="_blank" rel="noopener noreferrer">{link.label}<Arrow direction="external" /></a>)}</div>}</article></div>
+  <div class="detail-end"><a class="text-link" href="/projects/">전체 프로젝트 <Arrow /></a></div>
+</BaseLayout>

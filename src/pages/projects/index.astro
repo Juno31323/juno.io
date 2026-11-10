@@ -1,0 +1,10 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorkList from '../../components/WorkList.astro';
+import { getWorks } from '../../lib/works';
+const works = await getWorks();
+---
+<BaseLayout title="만든 것들" description="Firezone, PrintSafe, Chat2B-AU, RunningAppLIFT 등 개발·연구·기획 프로젝트.">
+  <header class="page-header"><h1>만든 것들<span class="accent-dot">.</span></h1></header>
+  <section class="project-collection" aria-label="전체 프로젝트"><div class="list-topline"><span>총 {works.length}개</span></div><WorkList works={works} /></section>
+</BaseLayout>
