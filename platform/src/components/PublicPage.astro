@@ -1,0 +1,9 @@
+---
+import Shell from '../layouts/Shell.astro';
+import Portfolio from './Portfolio.astro';
+import type { publicPage } from '../lib/public-page';
+interface Props { data: Awaited<ReturnType<typeof publicPage>>; }
+const {data}=Astro.props;
+Astro.response.status=data.status;
+---
+<Shell title={data.title} description={data.description} image={data.image} noindex={data.noindex}>{data.snapshot?<Portfolio snapshot={data.snapshot} base={data.base} token={data.token} path={data.path} />:<section class="empty-state"><span class="eyebrow">PORTFOLIO</span><h1>{data.status===503?'잠시 후 다시 확인해 주세요.':'페이지를 열 수 없습니다.'}</h1><p>{data.status===503?'페이지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.':'비공개이거나 공유가 중단된 페이지입니다.'}</p><a class="button" href="/">홈으로</a></section>}</Shell>

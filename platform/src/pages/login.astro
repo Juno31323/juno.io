@@ -1,0 +1,5 @@
+---
+import Shell from '../layouts/Shell.astro';
+if(Astro.locals.user)return Astro.redirect('/dashboard/');
+---
+<Shell title="로그인" noindex><section class="auth-panel"><a class="back" href="/">← 홈으로</a><span class="eyebrow">WELCOME BACK</span><h1>다시, 나의 작업실로.</h1><p>작성 중인 포트폴리오를 이어서 다듬어 보세요.</p>{Astro.url.searchParams.has('confirmation')&&<p class="feedback error">인증 링크가 만료됐거나 유효하지 않습니다. 다시 가입하거나 로그인해 주세요.</p>}<form method="post" action="/api/login/" data-api="login" class="form-stack"><label>이메일<input type="email" name="email" autocomplete="username" required /></label><label>비밀번호<input type="password" name="password" minlength="8" maxlength="128" autocomplete="current-password" required /></label><p data-feedback class="feedback" role="status"></p><button class="button" type="submit">로그인</button></form><p class="auth-foot">처음이라면 <a href="/signup/">내 페이지 만들기 ↗</a></p></section></Shell>

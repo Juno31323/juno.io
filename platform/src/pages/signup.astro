@@ -1,0 +1,5 @@
+---
+import Shell from '../layouts/Shell.astro';
+if(Astro.locals.user)return Astro.redirect('/dashboard/');
+---
+<Shell title="회원가입" noindex><section class="auth-panel"><a class="back" href="/">← 홈으로</a><span class="eyebrow">START YOUR PORTFOLIO</span><h1>첫 페이지를 만들어 볼까요?</h1><p>가입 후 이름과 한 줄 소개를 적으면 시작할 수 있어요.</p><form method="post" action="/api/signup/" data-api="signup" class="form-stack"><label>이메일<input type="email" name="email" autocomplete="username" required /></label><label>비밀번호<input type="password" name="password" minlength="8" maxlength="128" autocomplete="new-password" required /><span class="help">8–128자</span></label><p class="help">로그인 이메일은 포트폴리오에 공개되지 않습니다.</p><p data-feedback class="feedback" role="status"></p><button class="button" type="submit">가입하기</button></form><p class="auth-foot">이미 계정이 있다면 <a href="/login/">로그인</a></p></section></Shell>

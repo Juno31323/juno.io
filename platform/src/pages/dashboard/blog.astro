@@ -1,0 +1,7 @@
+---
+import Shell from '../../layouts/Shell.astro';
+import {ownerData} from '../../lib/server';
+import {dateLabel} from '../../lib/model';
+const info=await ownerData(Astro.locals.db!,Astro.locals.user!.id);if(!info.profile)return Astro.redirect('/dashboard/');const posts=info.records.filter(r=>r.kind==='posts');
+---
+<Shell title="가져온 글" dashboard noindex><header class="page-heading"><span class="eyebrow">IMPORTED JOURNAL</span><h1>가져온 블로그 글</h1><p>기존 글의 제목·본문·게시일·주소 이름을 보존합니다. 이 버전에서는 열람을 지원합니다.</p></header><div class="record-list panel">{posts.length?posts.map(post=><a href={`/dashboard/preview/?kind=posts&slug=${encodeURIComponent(post.slug)}`}><time>{dateLabel(post.published_at)}</time><h2>{post.title}</h2><p>{post.summary}</p></a>):<div class="empty-state"><h2>가져온 글이 없습니다.</h2><p>프로젝트와 프로필은 왼쪽 메뉴에서 작성할 수 있습니다.</p></div>}</div></Shell>

@@ -1,0 +1,14 @@
+---
+import '../styles/platform.css';
+interface Props { title: string; description?: string; image?: string; noindex?: boolean; dashboard?: boolean; }
+const { title, description='작업을 기록하고, 나만의 포트폴리오로 공유하세요.', image='/platform/og.png', noindex=false, dashboard=false }=Astro.props;
+const active=Astro.url.pathname;
+---
+<!doctype html><html lang="ko"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title} · 포트폴리오</title><meta name="description" content={description} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:image" content={new URL(image,Astro.url.origin).href} /><meta property="og:type" content="website" /><meta property="og:url" content={Astro.url.href} />{noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}<meta name="referrer" content="no-referrer" /><link rel="icon" href="/favicon.svg" /><link rel="preload" href="/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin /></head><body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<header class="app-header"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">p.</span>포트폴리오</a><nav aria-label="서비스 메뉴"><a href="/explore/" aria-current={active.startsWith('/explore')?'page':undefined}>작업 탐색</a><a href="/u/juno/">예시 보기</a><a class="button small" href={Astro.locals.user?'/dashboard/':'/login/'}>{Astro.locals.user?'내 대시보드':'로그인'}</a></nav></header>
+<div class:list={['app-shell',{'has-sidebar':dashboard}]}>{dashboard && <aside class="app-sidebar"><span class="eyebrow">MY WORKSPACE</span><nav aria-label="내 페이지 관리">{[['/dashboard/','내 페이지'],['/dashboard/projects/','프로젝트'],['/dashboard/design/','디자인'],['/dashboard/blog/','가져온 글']].map(([href,label])=><a href={href} aria-current={(href==='/dashboard/'?active===href:active.startsWith(href))?'page':undefined}>{label}</a>)}</nav><a class="sidebar-preview" href="/dashboard/preview/" target="_blank" rel="noopener">미리보기 ↗</a><form method="post" action="/api/logout/" data-api="logout"><button class="text-button" type="submit">로그아웃</button><p data-feedback role="status"></p></form></aside>}<main id="main" tabindex="-1"><slot /></main></div>
+{(dashboard||active==='/login/'||active==='/signup/')&&<noscript><p class="help">로그인과 편집에는 JavaScript가 필요합니다. 공개 포트폴리오는 JavaScript 없이도 읽을 수 있습니다.</p></noscript>}
+<footer class="app-footer"><a href="/">작업으로 소개하는 나.</a><span>포트폴리오 · 기록 · 공유</span></footer>
+<script>import '../scripts/app';</script>
+</body></html>

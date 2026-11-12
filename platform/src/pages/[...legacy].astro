@@ -1,0 +1,21 @@
+---
+import Shell from '../layouts/Shell.astro';
+const path=Astro.url.pathname;
+let destination='';
+if(path==='/about/')destination='/u/juno/#about';
+if(path==='/timeline/')destination='/u/juno/#timeline';
+if(path==='/projects/')destination='/u/juno/#projects';
+if(path==='/research/')destination='/u/juno/#research';
+if(path==='/blog/')destination='/u/juno/blog/';
+if(path==='/admin/')destination='/dashboard/';
+const project=path.match(/^\/projects\/([a-z0-9-]+)\/$/),research=path.match(/^\/research\/([a-z0-9-]+)\/$/);
+if(project)destination=`/u/juno/projects/${project[1]}/`;
+if(research)destination=`/u/juno/records/${research[1]}/`;
+if(path==='/entry/'){
+ const kind=Astro.url.searchParams.get('type')||'posts',slug=Astro.url.searchParams.get('slug')||'';
+ if(/^[a-z0-9][a-z0-9-]{0,99}$/.test(slug)&&['posts','projects','research','timeline','pages'].includes(kind))destination=kind==='pages'?'/u/juno/#about':`/u/juno/${kind==='posts'?'blog':kind==='projects'?'projects':'records'}/${slug}/`;
+}
+if(destination)return Astro.redirect(destination,308);
+Astro.response.status=404;
+---
+<Shell title="페이지를 찾을 수 없습니다" noindex><section class="empty-state"><h1>페이지를 찾을 수 없습니다.</h1><p>주소를 확인하거나 홈에서 다시 시작해 주세요.</p><a class="button" href="/">홈으로</a></section></Shell>

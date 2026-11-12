@@ -1,0 +1,1 @@
+-- No fictional users or portfolios. Integration tests create their own local accounts.

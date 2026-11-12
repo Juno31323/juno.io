@@ -1,0 +1,6 @@
+---
+import PublicPage from '../../../../components/PublicPage.astro';
+import {publicPage} from '../../../../lib/public-page';
+const data=await publicPage(Astro);
+---
+<PublicPage data={data} />

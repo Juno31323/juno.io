@@ -1,0 +1,33 @@
+{
+  "source": "Existing published portfolio and blog, read via public RLS",
+  "routes": {
+    "/": "/u/juno/",
+    "/about/": "/u/juno/#about",
+    "/projects/": "/u/juno/#projects",
+    "/research/": "/u/juno/#research",
+    "/timeline/": "/u/juno/#timeline",
+    "/blog/": "/u/juno/blog/",
+    "/admin/": "/dashboard/",
+    "/entry/?type=projects&slug=printsafe": "/u/juno/projects/printsafe/",
+    "/projects/printsafe/": "/u/juno/projects/printsafe/",
+    "/entry/?type=projects&slug=ecommerce-lms": "/u/juno/projects/ecommerce-lms/",
+    "/projects/ecommerce-lms/": "/u/juno/projects/ecommerce-lms/",
+    "/entry/?type=projects&slug=shared-auth-api": "/u/juno/projects/shared-auth-api/",
+    "/projects/shared-auth-api/": "/u/juno/projects/shared-auth-api/",
+    "/entry/?type=timeline&slug=academy-assistant": "/u/juno/records/academy-assistant/",
+    "/entry/?type=pages&slug=about": "/u/juno/#about",
+    "/entry/?type=projects&slug=firezone": "/u/juno/projects/firezone/",
+    "/projects/firezone/": "/u/juno/projects/firezone/",
+    "/entry/?type=timeline&slug=certificate-written": "/u/juno/records/certificate-written/",
+    "/entry/?type=timeline&slug=development-bootcamp": "/u/juno/records/development-bootcamp/",
+    "/entry/?type=timeline&slug=qualification-exam": "/u/juno/records/qualification-exam/",
+    "/entry/?type=posts&slug=my-first-post": "/u/juno/blog/my-first-post/",
+    "/entry/?type=timeline&slug=web-training": "/u/juno/records/web-training/",
+    "/entry/?type=timeline&slug=ansan-university": "/u/juno/records/ansan-university/",
+    "/entry/?type=projects&slug=runningapp-lift": "/u/juno/projects/runningapp-lift/",
+    "/projects/runningapp-lift/": "/u/juno/projects/runningapp-lift/",
+    "/entry/?type=research&slug=university-notice-rag": "/u/juno/records/university-notice-rag/",
+    "/research/university-notice-rag/": "/u/juno/records/university-notice-rag/",
+    "/entry/?type=timeline&slug=data-cleaning": "/u/juno/records/data-cleaning/"
+  }
+}

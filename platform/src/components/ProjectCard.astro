@@ -1,0 +1,8 @@
+---
+import { external, type Project } from '../lib/model';
+interface Props { project: Project; href: string; handle: string; token?: string; name?: string; }
+const { project:p,href,handle,token='',name }=Astro.props;
+const image=p.image_ids?.[0]?`/media/${p.image_ids[0]}/?handle=${handle}${token?`&token=${token}`:''}`:'';
+const safeImage=typeof image==='string'&&(image.startsWith('/images/')||image.startsWith('/media/')||external(image))?image:'';
+---
+<a class="project-card" href={href}>{safeImage&&<img src={safeImage} alt={p.legacy?.cardAlt||`${p.title} 대표 이미지`} loading="lazy" width="640" height="360" />}<div class="card-body"><div class="card-meta">{name&&<span>{name}</span>}{p.period&&<span>{p.period}</span>}</div><h3>{p.title}</h3><p>{p.summary}</p>{p.role&&<div class="card-role">{p.role}</div>}<div class="tags">{(p.tech||[]).map(tag=><span>{tag}</span>)}</div><span class="card-cta">작업 살펴보기 <span aria-hidden="true">↗</span></span></div></a>

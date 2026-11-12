@@ -1,0 +1,10 @@
+---
+import Shell from '../../layouts/Shell.astro';
+import Portfolio from '../../components/Portfolio.astro';
+import {ownerData} from '../../lib/server';
+const info=await ownerData(Astro.locals.db!,Astro.locals.user!.id);if(!info.profile)return Astro.redirect('/dashboard/');
+const kind=Astro.url.searchParams.get('kind'),slug=Astro.url.searchParams.get('slug');
+const path=kind&&slug?`${kind==='posts'?'blog':kind==='projects'?'projects':'records'}/${slug}/`:'';
+const snapshot={profile:info.profile,projects:info.projects.filter(p=>p.included),records:info.records.filter(r=>r.published&&new Date(r.published_at)<=new Date()),assets:info.assets};
+---
+<Shell title="내 페이지 미리보기" noindex><Portfolio snapshot={snapshot} base="/dashboard/preview/" path={path} preview /></Shell>

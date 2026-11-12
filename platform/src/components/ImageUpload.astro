@@ -1,0 +1,5 @@
+---
+interface Props { target: string; multiple?: boolean; }
+const {target,multiple=false}=Astro.props;
+---
+<details class="upload-panel"><summary>이미지 올리기</summary><form method="post" action="/api/upload/" data-api="upload" data-upload-target={target} data-multiple={String(multiple)} class="form-stack"><label>이미지 파일<input name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required /></label><label>이미지 설명<input name="alt" maxlength="300" required placeholder="이미지에 담긴 내용을 적어 주세요" /></label><p class="help">JPG·PNG·WebP·AVIF · 5MB 이하. {multiple?'프로젝트당 최대 8개.':'프로필 사진은 한 장을 선택합니다.'} 이미지를 올린 뒤 아래에서 저장해 주세요.</p><p data-feedback class="feedback" role="status"></p><button class="outline" type="submit">업로드</button></form></details>

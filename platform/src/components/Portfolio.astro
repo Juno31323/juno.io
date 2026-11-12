@@ -1,0 +1,34 @@
+---
+import { sections, accents, themeOf, external, dateLabel, type Snapshot } from '../lib/model';
+import { renderMarkdown } from '../lib/render';
+import ProjectCard from './ProjectCard.astro';
+interface Props { snapshot: Snapshot; base: string; token?: string; preview?: boolean; path?: string; }
+const {snapshot:s,base,token='',preview=false,path=''}=Astro.props,p=s.profile,theme=themeOf(p.theme);
+const parts=path.split('/').filter(Boolean),mode=parts[0]||'',slug=parts[1]||'';
+const detail=mode==='projects'?s.projects.find(project=>project.slug===slug):['blog','records'].includes(mode)&&slug?s.records.find(record=>record.slug===slug&&(mode!=='blog'||record.kind==='posts')):null;
+const posts=s.records.filter(r=>r.kind==='posts').sort((a,b)=>b.published_at.localeCompare(a.published_at));
+const media=(id:string)=>`/media/${id}/?handle=${p.handle}${token?`&token=${token}`:''}`;
+const md=(value:string)=>renderMarkdown(value,src=>p.legacy?.assetMap?.[src]?media(p.legacy.assetMap[src]):src);
+const image=p.photo_id?media(p.photo_id):'';
+const safeImage=typeof image==='string'&&(image.startsWith('/images/')||image.startsWith('/media/')||external(image))?image:'';
+const detailHref=(kind:string,value:string)=>preview?`${base}?kind=${kind}&slug=${encodeURIComponent(value)}`:`${base}${kind==='posts'?'blog':kind==='projects'?'projects':'records'}/${encodeURIComponent(value)}/`;
+const recordImage=detail&&'metadata'in detail?p.legacy?.assetMap?.[detail.metadata.coverImage||detail.metadata.cardImage]:null;
+const invalid=Boolean(mode&&!['blog','projects','records'].includes(mode))||Boolean(slug&&!detail);
+if(invalid) Astro.response.status=404;
+---
+<div class:list={['portfolio',{'theme-dark':theme.mode==='dark'}]} style={`--portfolio-accent:${accents[theme.accent][theme.mode==='dark'?'dark':'light']}`}>
+{preview&&<div class="preview-banner">미리보기 · 저장된 초안입니다. 방문자에게 보이는 화면은 게시 후 바뀝니다.</div>}
+<div class="portfolio-layout"><aside class="portfolio-nav"><a class="portfolio-name" href={base}>{p.name}</a><span>포트폴리오 · 기록</span><nav aria-label="포트폴리오 섹션">{theme.order.filter(key=>!theme.hidden.includes(key)).map(key=><a href={key==='posts'&&!preview?`${base}blog/`:`${base}#${key}`}>{sections[key]}</a>)}</nav></aside>
+<div class="portfolio-main">
+{invalid?<section class="empty-state"><h1>기록을 찾을 수 없습니다.</h1><a href={base}>포트폴리오로 돌아가기</a></section>:detail?<>
+  <a class="back" href={base}>← {p.name}의 포트폴리오</a><header class="portfolio-hero detail-hero"><span class="eyebrow">{mode==='projects'?'PROJECT':'JOURNAL'}</span><h1>{detail.title}</h1><p>{detail.summary}</p>{'published_at'in detail&&<time>{dateLabel(detail.published_at)}</time>}</header>
+  {recordImage&&<img class="record-cover" src={media(recordImage)} alt={s.assets.find(a=>a.id===recordImage)?.alt||detail.title} />}
+  {'tech'in detail?<><dl class="project-facts">{[['맡은 일',detail.role],['기간',detail.period],['기술',detail.tech.join(' · ')]].filter(([,v])=>v).map(([label,value])=><div><dt>{label}</dt><dd>{value}</dd></div>)}</dl><div class="image-gallery">{detail.image_ids.map(id=><img src={media(id)} alt={s.assets.find(a=>a.id===id)?.alt||`${detail.title} 이미지`} loading="lazy" />)}</div>{[['문제',detail.problem],['내가 맡은 부분',detail.contribution],['접근 방법',detail.approach],['결과',detail.result]].filter(([,value])=>value).map(([label,value])=><section class="prose project-section"><h2>{label}</h2><Fragment set:html={md(value)} /></section>)}<article class="prose" set:html={md(detail.body)} /><div class="result-links">{detail.links.filter(l=>external(l.url)).map(link=><a href={external(link.url)} rel="noopener noreferrer" target="_blank">{link.label} ↗</a>)}</div></>:<article class="prose" set:html={md(detail.body)} />}
+</>:mode==='blog'?<><header class="portfolio-hero"><span class="eyebrow">JOURNAL</span><h1>{p.name}의 글</h1><p>만들면서 남긴 기록.</p></header><div class="record-list">{posts.length?posts.map(post=><a href={detailHref('posts',post.slug)}><time>{dateLabel(post.published_at)}</time><h2>{post.title}</h2><p>{post.summary}</p></a>):<p class="muted">아직 공개한 글이 없습니다.</p>}</div></>:<>
+  <header class="portfolio-hero">{safeImage&&<img class="profile-photo" src={safeImage} alt={p.legacy?.photoAlt||`${p.name} 프로필 사진`} width="120" height="144" />}<div><span class="eyebrow">{p.legacy?.school||'HELLO, I AM'}</span><h1>{p.name}</h1><p>{p.intro}</p><div class="profile-links">{p.links.filter(l=>external(l.url)).map(link=><a href={external(link.url)} target="_blank" rel="noopener noreferrer">{link.label} ↗</a>)}</div></div></header>
+  {theme.order.filter(key=>!theme.hidden.includes(key)).map(key=><section id={key} class="portfolio-section"><div class="section-heading"><h2>{sections[key]}</h2>{key==='posts'&&!preview&&<a href={`${base}blog/`}>모든 글 ↗</a>}</div>
+    {key==='projects'?s.projects.length?<div class="project-grid">{[...s.projects].sort((a,b)=>Number(b.featured)-Number(a.featured)||a.position-b.position).map(project=><ProjectCard project={project} handle={p.handle} token={token} href={detailHref('projects',project.slug)} />)}</div>:<p class="empty-inline">첫 프로젝트를 준비하고 있습니다.</p>:key==='about'?p.about?<div class="prose" set:html={md(p.about)} />:<p class="empty-inline">{p.intro||'소개를 준비하고 있습니다.'}</p>:key==='posts'?<div class="record-list">{posts.length?posts.slice(0,3).map(post=><a href={detailHref('posts',post.slug)}><time>{dateLabel(post.published_at)}</time><h3>{post.title}</h3><p>{post.summary}</p></a>):<p class="empty-inline">아직 공개한 글이 없습니다.</p>}</div>:<div class="record-list">{s.records.filter(r=>r.kind===key).length?s.records.filter(r=>r.kind===key).map(record=>key==='timeline'?<div class="timeline-record"><span>{record.metadata.period||''}</span><div><h3>{record.title}</h3><div class="prose" set:html={md(record.body)} /></div></div>:<a href={detailHref(key,record.slug)}><span class="muted">{record.metadata.category||''}</span><h3>{record.title}</h3><p>{record.summary}</p></a>):<p class="empty-inline">아직 공개한 기록이 없습니다.</p>}</div>}
+  </section>)}
+</>}
+<footer class="portfolio-footer"><span>{p.name}</span><a href="/signup/">내 포트폴리오 만들기 ↗</a></footer>
+</div></div></div>

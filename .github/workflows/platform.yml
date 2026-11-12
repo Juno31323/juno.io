@@ -1,0 +1,48 @@
+name: Verify portfolio platform
+on:
+  push:
+    branches: [main]
+    paths: ['platform/**', 'package*.json', 'public/fonts/**', 'public/images/**', 'public/platform/**', '.github/workflows/platform.yml']
+  pull_request:
+    paths: ['platform/**', 'package*.json', 'public/fonts/**', 'public/images/**', 'public/platform/**', '.github/workflows/platform.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  platform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PLATFORM_TEST_FIXTURE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run platform:db
+      - run: npm run platform:migrate
+      - run: npm run platform:env
+      - run: npm run platform:build
+      - name: Run server and real local integration tests
+        run: |
+          npm run platform:start > /tmp/platform-server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4400/login/ > /dev/null; then break; fi
+            sleep 1
+          done
+          npm run test:platform
+          node platform/scripts/verify-production.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: platform-verification
+          path: |
+            artifacts/platform/*.png
+            artifacts/platform/results.json
+            artifacts/platform/resources.json
+          # Local account credentials and .env are deliberately excluded.
+      - run: node platform/scripts/supabase.mjs stop
+        if: always()

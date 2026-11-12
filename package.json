@@ -12,23 +12,40 @@
     "test:cms": "node scripts/verify-cms.mjs",
     "verify:assets": "node scripts/verify-assets.mjs",
     "test:site": "node scripts/verify-site.mjs",
-    "seed:generate": "node scripts/generate-seed.mjs"
+    "seed:generate": "node scripts/generate-seed.mjs",
+    "preplatform:dev": "node platform/scripts/prepare-public.mjs",
+    "platform:dev": "node --env-file-if-exists=platform/.env node_modules/astro/bin/astro.mjs dev --root ./platform --host 127.0.0.1 --port 4400",
+    "platform:migrate": "node platform/scripts/supabase.mjs migration up --local",
+    "platform:check": "astro check --root ./platform",
+    "platform:build": "node platform/scripts/prepare-public.mjs && astro check --root ./platform && astro build --root ./platform",
+    "platform:start": "node --env-file-if-exists=platform/.env platform/dist/server/entry.mjs",
+    "platform:env": "node platform/scripts/local-env.mjs",
+    "platform:db": "node platform/scripts/supabase.mjs start",
+    "platform:status": "node platform/scripts/supabase.mjs status",
+    "test:platform": "node platform/tests/platform.mjs"
   },
   "engines": {
     "node": ">=22.23.4"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.12",
+    "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",
     "astro": "7.4.7",
     "dompurify": "^3.4.17",
     "marked": "^18.2.0",
+    "sanitize-html": "^2.18.2",
     "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
     "@playwright/test": "^1.56.1",
     "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "@types/sanitize-html": "^2.16.2",
     "node": "^24.0.0",
+    "pg": "^8.23.1",
+    "supabase": "^3.1.0",
     "typescript": "^5.9.3"
   }
 }

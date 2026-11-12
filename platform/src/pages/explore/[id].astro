@@ -1,0 +1,12 @@
+---
+import Shell from '../../layouts/Shell.astro';
+import {renderMarkdown} from '../../lib/render';
+import {external,uuid} from '../../lib/model';
+const {data}=Astro.locals.db&&uuid(Astro.params.id||'')?await Astro.locals.db.rpc('pf_explore_project',{p_id:Astro.params.id}):{data:null};
+if(!data)Astro.response.status=404;
+const p=data?.project;
+const {data:publication}=p?await Astro.locals.db!.rpc('pf_read',{p_handle:data.handle,p_token:''}):{data:null};
+const imageMap=publication?.snapshot?.profile?.legacy?.assetMap||{};
+const md=(body:string)=>renderMarkdown(body,src=>imageMap[src]?`/media/${imageMap[src]}/?handle=${data.handle}`:src);
+---
+<Shell title={p?`${p.title} — ${data.name}`:'작업을 열 수 없습니다'} description={p?.summary} noindex={!p}>{p?<article class="explore-detail"><a class="back" href="/explore/">← 작업 탐색</a><header class="page-heading"><span class="eyebrow">PROJECT / {data.name}</span><h1>{p.title}</h1><p>{p.summary}</p><div class="tags">{p.tech.map((tag:string)=><span>{tag}</span>)}</div></header><div class="image-gallery">{p.image_ids.map((id:string)=><img src={`/media/${id}/?handle=${data.handle}`} alt={publication?.snapshot?.assets?.find((a:any)=>a.id===id)?.alt||`${p.title} 이미지`} loading="lazy" />)}</div><dl class="project-facts"><div><dt>맡은 일</dt><dd>{p.role||'별도 기재 없음'}</dd></div><div><dt>기간</dt><dd>{p.period||'별도 기재 없음'}</dd></div></dl>{[['문제',p.problem],['내가 맡은 부분',p.contribution],['접근 방법',p.approach],['결과',p.result]].filter(([,v])=>v).map(([label,value])=><section class="prose project-section"><h2>{label}</h2><Fragment set:html={md(value)} /></section>)}<div class="prose" set:html={md(p.body)} /><div class="result-links">{p.links.filter((l:any)=>external(l.url)).map((link:any)=><a href={external(link.url)} target="_blank" rel="noopener noreferrer">{link.label} ↗</a>)}</div><a class="button author-link" href={`/u/${data.handle}/`}>{data.name}의 포트폴리오 보기 ↗</a></article>:<section class="empty-state"><h1>작업을 열 수 없습니다.</h1><p>공개가 중단됐거나 탐색에서 제외된 작업입니다.</p><a class="outline" href="/explore/">다른 작업 보기</a></section>}</Shell>

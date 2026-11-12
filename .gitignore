@@ -6,6 +6,13 @@ dist-pages/
 .env.*
 !.env.example
 artifacts/
+platform/dist/
+platform/.astro/
+platform/public/
+dist-redirects/
+platform/supabase/.temp/
+platform/supabase/.branches/
+supabase/.temp/
 .agents/
 .impeccable/
 assets/plates/
@@ -13,6 +20,7 @@ CONTENT-NOTES.md
 PRODUCT.md
 IMPECCABLE.md
 VERIFICATION.md
+!platform/VERIFICATION.md
 DESIGN-REFERENCES.md
 public/images/**/*.json
 .agents/skills/impeccable/scripts/bin/
