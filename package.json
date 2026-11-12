@@ -10,6 +10,8 @@
     "preview": "astro preview --host 127.0.0.1",
     "test:browser": "node scripts/verify-browser.mjs",
     "test:cms": "node scripts/verify-cms.mjs",
+    "verify:assets": "node scripts/verify-assets.mjs",
+    "test:site": "node scripts/verify-site.mjs",
     "seed:generate": "node scripts/generate-seed.mjs"
   },
   "engines": {

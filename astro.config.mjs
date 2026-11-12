@@ -26,7 +26,7 @@ const portablePaths = {
 export default defineConfig({
   output: 'static',
   outDir: process.env.BUILD_OUT_DIR || './dist',
-  site: process.env.SITE_URL || 'https://juno31323.github.io',
+  site: process.env.SITE_URL || 'https://juno31323.me',
   base: base || '/',
   integrations: [portablePaths],
   trailingSlash: 'always',

@@ -46,7 +46,7 @@ npm run test:cms
 
 저장소 Settings → Pages → Source를 **GitHub Actions**로 지정합니다. main에 코드를 올리면 `.github/workflows/deploy.yml`이 빌드·배포합니다.
 
-프로젝트 주소는 `https://juno31323.github.io/juno.io/`입니다. 워크플로는 `BASE_PATH=/juno.io`로 링크·이미지·폰트 경로를 처리합니다. 다른 호스트에서는 `BASE_PATH`와 `SITE_URL`을 바꾸세요. Supabase 프로젝트를 바꾸면 저장소 Variables의 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY`도 바꿉니다. 현재 워크플로에는 이 사이트의 공개용 연결 정보가 기본값으로 들어 있습니다.
+사이트 주소는 `https://juno31323.me/`입니다. 커스텀 도메인은 저장소 이름이 붙지 않는 루트 경로를 사용하므로 워크플로는 `SITE_URL=https://juno31323.me`, `BASE_PATH=/`로 빌드합니다. `public/CNAME`에도 같은 도메인을 기록합니다. 빌드 후 `npm run verify:assets`가 HTML·CSS의 로컬 리소스 경로를 검사합니다. GitHub 기본 프로젝트 주소로 돌아갈 때만 `BASE_PATH=/juno.io`로 바꾸고 커스텀 도메인 설정을 해제하세요. Supabase 프로젝트를 바꾸면 저장소 Variables의 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY`도 바꿉니다. 현재 워크플로에는 이 사이트의 공개용 연결 정보가 기본값으로 들어 있습니다.
 
 ## 파일
 

@@ -22,12 +22,13 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          SITE_URL: https://juno31323.github.io
-          BASE_PATH: /juno.io
+          SITE_URL: https://juno31323.me
+          BASE_PATH: /
           # These are browser-public credentials, protected by Supabase RLS.
           # Repository Variables can override them when moving projects.
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL || 'https://iqghiamzcjxnzrkgcvlb.supabase.co' }}
           PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_irnwmGtJskT2ljOSDXnmMg_YSJ8JUw4' }}
+      - run: npm run verify:assets
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
