@@ -1,12 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/cms.css';
+import '../styles/writing.css';
 ---
 <BaseLayout title="기록" description="민준호의 글과 작업 기록." noindex>
   <section class="entry-reader" data-entry>
     <a class="back-link" href="/blog/" data-entry-back>글 목록으로</a>
-    <header class="detail-header"><h1 data-entry-title>기록을 불러오는 중입니다.</h1><p class="detail-summary" data-entry-summary></p><p class="entry-date" data-entry-date></p></header>
-    <article class="prose" data-entry-body></article>
+    <header class="detail-header"><div data-entry-series-label></div><h1 data-entry-title>기록을 불러오는 중입니다.</h1><p class="detail-summary" data-entry-summary></p><div class="reader-meta"><p class="entry-date" data-entry-date></p><span data-reading-time></span><button type="button" class="copy-link" data-copy-link hidden>링크 복사</button></div><div class="tag-list" data-entry-tags></div></header>
+    <img class="reader-cover" data-entry-cover hidden alt="" />
+    <div class="reader-layout"><article class="prose" data-entry-body></article><aside class="reader-sidebar" hidden><details open class="reader-toc"><summary>이 글의 목차</summary><nav data-entry-toc aria-label="본문 목차"></nav></details><section data-series-panel hidden><h2 data-series-title></h2><ol data-series-posts></ol></section></aside></div>
+    <nav class="post-navigation" data-post-navigation hidden aria-label="다른 글"></nav>
     <p class="cms-feedback" data-entry-status role="status"></p>
     <noscript><p>이 기록을 보려면 JavaScript를 켜 주세요.</p></noscript>
   </section>

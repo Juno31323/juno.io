@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { type Entry, type EntryKind, entryUrl, safeUrl } from '../lib/cms';
-import { markdown } from '../lib/markdown';
+import { readingMinutes, tagsOf, seriesOf } from '../lib/blog';
+import { createWriter } from './writer';
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const login = $<HTMLFormElement>('#login-form'), form = $<HTMLFormElement>('#entry-form'), profileForm = $<HTMLFormElement>('#profile-form');
@@ -15,24 +16,22 @@ const say = (message: string, error = false) => {
 };
 const localDate = (value: string) => { const d = new Date(value); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 const canLeave = () => !dirty || window.confirm('저장하지 않은 내용이 있습니다. 이 화면을 나갈까요?');
+const writer = createWriter(form, () => dirty = true, say, version => { if (current) current.updated_at = version; });
 window.addEventListener('beforeunload', event => { if (dirty) event.preventDefault(); });
 form.addEventListener('input', () => dirty = true);
 profileForm.addEventListener('input', () => dirty = true);
 
-function showLogin() { $('#login-panel').hidden = false; $('#workspace').hidden = true; $('#logout').hidden = true; }
-function preview(show: boolean) {
-  $('#body-label').hidden = show; $('#body-preview').hidden = !show;
-  $('#edit-tab').setAttribute('aria-pressed', String(!show)); $('#preview-tab').setAttribute('aria-pressed', String(show));
-  if (show) $('#body-preview').innerHTML = markdown(input('body').value) || '<p>본문을 작성하면 여기에 표시됩니다.</p>';
-}
-$('#edit-tab').addEventListener('click', () => preview(false)); $('#preview-tab').addEventListener('click', () => preview(true));
-
+function showLogin() { writer.leaveFocus(); $('#login-panel').hidden = false; $('#workspace').hidden = true; $('#logout').hidden = true; }
 function openEntry(entry: Entry | null) {
   $('#editor-feedback').textContent = '';
   current = entry; form.reset();
   for (const name of ['title', 'slug', 'summary', 'body', 'status', 'sort_order']) input(name).value = String(entry?.[name as keyof Entry] ?? (name === 'status' ? 'draft' : name === 'sort_order' ? '0' : ''));
   input('published_at').value = localDate(entry?.published_at || new Date().toISOString());
   input('slug').readOnly = Boolean(entry?.id);
+  if (!entry) input('slug').value = `post-${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
+  input('tags').value = entry ? tagsOf(entry).join(', ') : '';
+  input('series').value = entry ? seriesOf(entry) : '';
+  for (const name of ['coverImage', 'coverAlt']) input(name).value = typeof entry?.metadata[name] === 'string' ? entry.metadata[name] : '';
   for (const name of ['category', 'period', 'role', 'cardImage', 'cardAlt']) input(name).value = entry?.metadata[name] || '';
   input('work_status').value = entry?.metadata.status || '';
   input('featured').checked = Boolean(entry?.featured);
@@ -41,12 +40,14 @@ function openEntry(entry: Entry | null) {
   $('#editor-title').textContent = entry ? entry.title : kind === 'posts' ? '새 글' : '새 기록';
   const view = $<HTMLAnchorElement>('#view-entry'); view.hidden = !entry || entry.status !== 'published'; if (entry) view.href = entryUrl(entry);
   $('#saved-at').textContent = entry?.updated_at ? `최근 저장 ${new Date(entry.updated_at).toLocaleString('ko-KR')}` : '';
-  dirty = false; preview(false); renderList();
+  dirty = false; writer.open(entry, kind, entries); renderList();
 }
 function renderList() {
   const query = $<HTMLInputElement>('#admin-search').value.toLowerCase();
   const list = $('#admin-entries'); list.replaceChildren();
-  const filtered = entries.filter(entry => entry.title.toLowerCase().includes(query));
+  const filter = $<HTMLSelectElement>('#admin-filter').value;
+  const state = (entry: Entry) => entry.status === 'published' && new Date(entry.published_at) > new Date() ? 'scheduled' : entry.status;
+  const filtered = entries.filter(entry => entry.title.toLowerCase().includes(query) && (filter === 'all' || filter === state(entry)));
   $('#entry-count').textContent = `${filtered.length}개 · 보관한 기록 포함`;
   for (const entry of filtered) {
     const li = document.createElement('li'), button = document.createElement('button'), title = document.createElement('strong'), status = document.createElement('span');
@@ -67,7 +68,7 @@ async function allEntries(filter?: EntryKind) {
 }
 async function loadList() {
   say('목록을 불러오는 중입니다.');
-  try { entries = await allEntries(kind); openEntry(entries[0] || null); say(entries.length ? '' : '첫 기록을 작성해 보세요.'); }
+  try { entries = await allEntries(kind); if (kind === 'posts') entries.sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at))); openEntry(entries[0] || null); say(entries.length ? '' : '첫 기록을 작성해 보세요.'); }
   catch { say('목록을 불러오지 못했습니다. DB 설정과 연결 상태를 확인하고 다시 로그인해 주세요.', true); }
 }
 async function loadProfile() {
@@ -83,12 +84,17 @@ kinds.addEventListener('change', async () => {
   if (isProfile) await loadProfile(); else { kind = kinds.value as EntryKind; await loadList(); }
 });
 $('#new-entry').addEventListener('click', () => { if (!saving && canLeave()) openEntry(null); });
+$('#recover-new').addEventListener('click', () => { if (!saving && canLeave()) openEntry(null); });
 $('#admin-search').addEventListener('input', renderList);
+$('#admin-filter').addEventListener('change', renderList);
 
 async function enterWorkspace() {
   if (!supabase) return;
   const { data, error } = await supabase.rpc('is_site_admin');
   if (error || !data) { showLogin(); $('#logout').hidden = false; say('관리자 권한이 없습니다. Supabase에서 관리자 계정을 등록해 주세요.', true); return; }
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) { showLogin(); return; }
+  if (writer.setOwner(session.session.user.id)) { dirty = false; current = null; form.reset(); profileForm.reset(); }
   $('#login-panel').hidden = true; $('#workspace').hidden = false; $('#logout').hidden = false;
   if (dirty) { say('다시 로그인했습니다. 작성 중인 내용을 저장해 주세요.'); return; }
   await loadList();
@@ -108,22 +114,29 @@ $('#logout').addEventListener('click', async () => {
   if (saving || !canLeave()) return;
   const { error } = await supabase!.auth.signOut();
   if (error) { say('로그아웃하지 못했습니다. 다시 시도해 주세요.', true); return; }
-  dirty = false; current = null; entries = []; form.reset(); profileForm.reset(); $('#admin-entries').replaceChildren(); showLogin(); say('로그아웃했습니다.');
+  writer.logout(); dirty = false; current = null; entries = []; form.reset(); profileForm.reset(); $('#admin-entries').replaceChildren(); showLogin(); say('로그아웃했습니다.');
 });
 
 form.addEventListener('submit', async event => {
   event.preventDefault(); if (saving || !supabase) return;
+  if (input('body').value.length > 200000) { say('본문은 200,000자까지 저장할 수 있습니다.', true); return; }
   const links: {label: string; url: string}[] = [];
   for (const line of input('links').value.split('\n').filter(line => line.trim())) {
     const split = line.indexOf('|'), label = line.slice(0, split).trim(), url = line.slice(split + 1).trim();
     if (split < 1 || !safeUrl(url)) { say('관련 링크를 “이름 | https://주소” 형식으로 입력해 주세요.', true); return; } links.push({ label, url });
   }
   if (input('cardImage').value && !safeUrl(input('cardImage').value)) { say('목록 이미지 URL을 확인해 주세요.', true); return; }
+  if (kind === 'posts' && input('coverImage').value && !safeUrl(input('coverImage').value)) { $<HTMLDetailsElement>('#publish-settings').open = true; say('커버 이미지 URL을 확인해 주세요.', true); return; }
+  if (kind === 'posts' && input('coverImage').value && !input('coverAlt').value.trim()) { $<HTMLDetailsElement>('#publish-settings').open = true; say('커버 이미지 설명을 입력해 주세요.', true); input('coverAlt').focus(); return; }
+  const tags = [...new Set(input('tags').value.split(',').map(tag => tag.trim()).filter(Boolean))];
+  if (kind === 'posts' && (tags.length > 8 || tags.some(tag => tag.length > 24))) { say('태그는 최대 8개, 각각 24자까지 입력해 주세요.', true); input('tags').focus(); return; }
   const payload: Entry = {
     kind, slug: input('slug').value, title: input('title').value.trim(), summary: input('summary').value.trim(), body: input('body').value,
     status: input('status').value as Entry['status'], published_at: new Date(input('published_at').value).toISOString(),
     sort_order: Number(input('sort_order').value), featured: input('featured').checked,
-    metadata: { ...current?.metadata, category: input('category').value, period: input('period').value, role: input('role').value, status: input('work_status').value, cardImage: input('cardImage').value, cardAlt: input('cardAlt').value, links },
+    metadata: { ...current?.metadata, category: input('category').value, period: input('period').value, role: input('role').value, status: input('work_status').value, cardImage: input('cardImage').value, cardAlt: input('cardAlt').value, links,
+      ...(kind === 'posts' ? { tags, series: input('series').value.trim(), coverImage: input('coverImage').value.trim(), coverAlt: input('coverAlt').value.trim(), readingMinutes: readingMinutes(input('body').value) } : {}),
+    },
   };
   if (!payload.title) { say('제목을 입력해 주세요.', true); return; }
   saving = true; form.inert = true; $<HTMLButtonElement>('#save-entry').disabled = true; say('저장하는 중입니다.');
@@ -133,7 +146,7 @@ form.addEventListener('submit', async event => {
     if (error) { say(error.code === '23505' ? '같은 주소 이름이 있습니다. 다른 이름을 입력해 주세요.' : '저장하지 못했습니다. 입력한 내용은 남아 있습니다. 연결과 관리자 권한을 확인해 주세요.', true); return; }
     if (!data) { say('다른 창에서 수정된 내용이 있습니다. 이 본문을 복사해 두고 새로고침한 뒤 다시 저장해 주세요.', true); return; }
     const index = entries.findIndex(entry => entry.id === data.id); if (index < 0) entries.unshift(data); else entries[index] = data;
-    openEntry(data); say(payload.status === 'published' ? new Date(payload.published_at) > new Date() ? '예약했습니다. 발행 시각부터 공개됩니다.' : '저장했습니다. 사이트에서 바로 확인할 수 있습니다.' : payload.status === 'draft' ? '초안으로 저장했습니다.' : '보관했습니다. 방문자에게 표시되지 않습니다.');
+    writer.saved(); openEntry(data); say(payload.status === 'published' ? new Date(payload.published_at) > new Date() ? '예약했습니다. 발행 시각부터 공개됩니다.' : '저장했습니다. 사이트에서 바로 확인할 수 있습니다.' : payload.status === 'draft' ? '초안으로 저장했습니다.' : '보관했습니다. 방문자에게 표시되지 않습니다.');
   } catch { say('연결이 끊겨 저장하지 못했습니다. 입력한 내용은 남아 있습니다. 다시 저장해 주세요.', true); }
   finally { saving = false; form.inert = false; const button = $<HTMLButtonElement>('#save-entry'); button.disabled = false; button.focus({ preventScroll: true }); }
 });
@@ -150,8 +163,10 @@ $('#upload-image').addEventListener('click', async () => {
     const { error } = await supabase.storage.from('site-images').upload(path, file, { contentType: file.type, upsert: false });
     if (error) throw error;
     const { data } = supabase.storage.from('site-images').getPublicUrl(path);
-    const area = $<HTMLTextAreaElement>('#entry-body'); area.setRangeText(`\n![${alt.replace(/[\[\]\\\n]/g, '')}](${data.publicUrl})\n`, area.selectionStart, area.selectionEnd, 'end');
-    dirty = true; preview(false); say('본문에 이미지를 넣었습니다. 글도 저장해 주세요.');
+    const isCover = kind === 'posts' && $<HTMLSelectElement>('#image-target').value === 'cover';
+    if (isCover) { input('coverImage').value = data.publicUrl; input('coverAlt').value = alt; $<HTMLDetailsElement>('#publish-settings').open = true; }
+    else { const area = $<HTMLTextAreaElement>('#entry-body'); area.setRangeText(`\n![${alt.replace(/[\[\]\\\n]/g, '')}](${data.publicUrl})\n`, area.selectionStart, area.selectionEnd, 'end'); }
+    writer.changed(); say(isCover ? '커버 이미지를 골랐습니다. 글도 저장해 주세요.' : '본문에 이미지를 넣었습니다. 글도 저장해 주세요.');
   } catch { say('이미지를 올리지 못했습니다. 저장소 설정과 관리자 권한을 확인하고 다시 시도해 주세요.', true); }
   finally { saving = false; form.inert = false; button.disabled = false; button.focus({ preventScroll: true }); }
 });

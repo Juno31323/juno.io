@@ -51,6 +51,17 @@ Recall@5 67.35%와 89.80%는 기존 연구의 검색 지표다. 막대는 비교
 - `src/pages/index.astro`: 대시보드 기본 콘텐츠.
 - `src/scripts/public-content.ts`: Supabase 공개 데이터 갱신.
 
-## 검증
+## 블로그와 작성 화면
+
+Velog의 [발행 미리보기](https://github.com/velopert/velog-client/blob/master/src/components/write/PublishPreview.tsx)와 [Markdown 작성 흐름](https://github.com/velopert/velog-client/blob/master/src/containers/write/MarkdownEditorContainer.tsx), Notion의 [서식·슬래시 메뉴](https://www.notion.com/help/writing-and-editing-basics)를 참고한다. 기존 Markdown 저장 형식을 유지하고 작성 도구를 확장하며, Notion의 전체 블록 편집기를 복제하지 않는다.
+
+- 작성: 넓은 제목·본문, 서식 도구, 빈 줄의 `/` 메뉴, 글 틀, 작성/나란히/미리보기, 집중 모드. 발행 정보는 접는 패널로 분리한다.
+- 보관: 브라우저에 계정·기록별 기기 사본을 보관하고, 복구는 명시적으로 선택한다. 서버 저장·공개 여부와 기기 보관 상태를 구분한다. 저장 충돌과 실패 시 입력을 보존한다.
+- 분류: `entries.metadata`에 tags/series/coverImage/coverAlt/readingMinutes를 저장한다. 기존 글에는 기본값을 적용하며 스키마나 권한 변경은 없다.
+- 목록: 기존 대시보드 셸 안에 태그 탐색, 검색·정렬, 글 카드, 시리즈를 배치한다. 필터는 URL에 남고 빈 상태·조회 실패·재시도를 제공한다.
+- 읽기: 본문 너비를 제한하고, 목차·태그·읽기 시간·커버·코드 및 링크 복사·시리즈 이동을 제공한다. 좁은 화면의 목차는 본문 앞에 표시한다.
+- UI/UX Pro Max의 Error Recovery 가이드에 따라 오류 메시지에 복구 방법을 함께 표시한다. 버튼과 입력 도구는 키보드와 터치로 사용할 수 있어야 한다.
+
+## 검증 범위
 
 빌드·리소스 검사, 공개 페이지·상세 페이지의 반응형/키보드/JS 없는 메뉴, 관리자 편집과 오류 시 입력 유지, 홈의 공개 글 필터를 확인한다. 실제 개인 정보나 발행 내용을 변경하는 검증은 하지 않는다.

@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { type Entry, entryUrl, localUrl, dateLabel, safeUrl } from '../lib/cms';
 import { markdown } from '../lib/markdown';
+import { setupBlog, enhanceReader } from './blog-content';
 
 const text = (tag: string, value: string, className = '') => {
   const el = document.createElement(tag); el.textContent = value; el.className = className; return el;
@@ -39,37 +40,6 @@ function applyDetail(entry: Entry, container: ParentNode = document) {
   }
 }
 
-async function blog() {
-  const list = document.querySelector('[data-blog-list]'); if (!list) return;
-  const status = document.querySelector('[data-blog-status]')!;
-  if (!supabase) { status.textContent = '블로그를 준비하고 있습니다.'; return; }
-  const search = document.querySelector<HTMLInputElement>('#blog-search')!;
-  const more = document.querySelector<HTMLButtonElement>('[data-blog-more]')!;
-  let page = 0, busy = false, generation = 0;
-  const load = async (reset = false) => {
-    if (busy && !reset) return;
-    if (reset) { page = 0; list.replaceChildren(); }
-    const request = ++generation; busy = true; more.disabled = true; more.hidden = true;
-    status.textContent = '글을 불러오는 중입니다.';
-    let query = visibleEntries().eq('kind', 'posts').order('published_at', { ascending: false }).order('id').range(page * 10, page * 10 + 10);
-    const term = search.value.trim().replace(/[%_\\]/g, '\\$&');
-    if (term) query = query.ilike('title', `%${term}%`);
-    const { data, error } = await query;
-    if (request !== generation) return;
-    busy = false; more.disabled = false;
-    if (error) { status.textContent = '글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'; more.textContent = '다시 시도'; more.hidden = false; return; }
-    const entries = (data || []) as Entry[];
-    for (const entry of entries.slice(0, 10)) {
-      const li = document.createElement('li'), a = document.createElement('a'); a.href = entryUrl(entry);
-      a.append(text('time', dateLabel(entry.published_at)), text('h2', entry.title), text('p', entry.summary)); li.append(a); list.append(li);
-    }
-    status.textContent = !list.children.length ? (term ? '검색한 제목의 글이 없습니다.' : '아직 올린 글이 없습니다. 첫 기록을 준비하고 있습니다.') : '';
-    more.textContent = '더 보기'; more.hidden = entries.length <= 10; page++;
-  };
-  let timer: ReturnType<typeof setTimeout>;
-  search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => void load(true), 300); });
-  more.addEventListener('click', () => void load()); await load();
-}
 
 async function entryPage() {
   const container = document.querySelector('[data-entry]'); if (!container) return;
@@ -83,7 +53,7 @@ async function entryPage() {
   if (error) { container.querySelector('h1')!.textContent = '기록을 불러오지 못했습니다.'; status.textContent = '잠시 후 이 페이지를 새로고침해 주세요.'; return; }
   if (!data) { container.querySelector('h1')!.textContent = '공개된 기록이 없습니다.'; status.textContent = '주소를 확인하거나 목록에서 다른 글을 골라 주세요.'; return; }
   applyDetail(data, container);
-  if (kind === 'posts') container.querySelector('[data-entry-date]')!.textContent = dateLabel(data.published_at);
+  if (kind === 'posts') { container.querySelector('[data-entry-date]')!.textContent = dateLabel(data.published_at); await enhanceReader(data, container); }
 }
 
 async function portfolio() {
@@ -175,4 +145,4 @@ async function homeTimeline() {
     li.append(a); return li;
   }));
 }
-void Promise.allSettled([blog(), entryPage(), portfolio(), profile(), homePosts(), homeTimeline()]);
+void Promise.allSettled([setupBlog(), entryPage(), portfolio(), profile(), homePosts(), homeTimeline()]);

@@ -5,9 +5,11 @@ Astro + TypeScript + Supabase. 관리자 화면에서 글과 포트폴리오 내
 UI/UX Pro Max를 적용한 대시보드 구성입니다. 왼쪽 탐색 메뉴와 프로필·작업·연구·이력·최근 글 패널을 사용하며, 모바일에서는 상단 메뉴와 한 열 배치로 전환합니다. 현재 시각 규칙은 [DESIGN.md](DESIGN.md)에 기록합니다.
 
 - `/admin/`: 이메일·비밀번호 로그인, 글·프로젝트·연구·이력·소개·프로필 관리
-- `/blog/`: 공개 글, 제목 검색, 더 보기
+- `/blog/`: 공개 글 카드, 제목·요약·태그 검색, 태그 필터, 시리즈, 정렬, 더 보기
 - Supabase Auth / Postgres / Storage, 관리자만 쓰기 가능한 RLS
-- 초안·예약 발행·보관, Markdown 미리보기, 이미지 업로드, JSON 백업
+- Markdown 서식·슬래시 메뉴, 실시간 미리보기, 집중 모드, 기기 초안 복구
+- 초안·예약 발행·보관, 태그·시리즈·커버 이미지, Markdown 입출력, JSON 백업
+- 글 목차, 코드·링크 복사, 읽기 시간, 시리즈·이전/다음 글 이동
 - GitHub Pages 자동 배포: [Juno31323/juno.io](https://github.com/Juno31323/juno.io)
 
 일상적인 글 작성은 GitHub를 수정하거나 재배포할 필요가 없습니다. 자세한 사용법은 [운영 가이드](OPERATIONS.md)를 보세요.
@@ -54,8 +56,8 @@ npm run test:cms
 
 | 위치 | 용도 |
 | --- | --- |
-| `src/pages/admin/`, `src/scripts/admin.ts` | 관리자 화면 |
-| `src/scripts/public-content.ts` | Supabase 공개 콘텐츠 조회 |
+| `src/pages/admin/`, `src/scripts/admin.ts`, `src/scripts/writer.ts` | 관리자·작성 화면과 기기 초안 |
+| `src/scripts/public-content.ts`, `src/scripts/blog-content.ts` | Supabase 공개 콘텐츠·블로그 조회 |
 | `src/lib/markdown.ts` | Markdown 렌더링·HTML 정제 |
 | `supabase/` | 테이블·권한·공개 초기 내용·권한 테스트 |
 | `src/content/`, `src/data/` | 기존 포트폴리오의 정적 초기 내용 |

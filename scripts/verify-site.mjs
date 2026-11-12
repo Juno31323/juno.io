@@ -18,7 +18,7 @@ try {
     assert.equal(await page.locator('h1').count(), 1, `${route}: heading`);
     assert.ok(await page.evaluate(() => document.fonts.check('16px "Pretendard Variable"')), `${route}: font`);
     assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).color), 'rgb(25, 33, 47)', `${route}: stylesheet`);
-    assert.equal(await page.locator('img').evaluateAll(images => images.filter(img => !img.complete || !img.naturalWidth || !img.alt).length), 0, `${route}: images`);
+    assert.equal(await page.locator('img[src]').evaluateAll(images => images.filter(img => !img.complete || !img.naturalWidth || !img.alt).length), 0, `${route}: images`);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${route}: overflow`);
     assert.equal(await page.locator('[src^="/juno.io/"], [href^="/juno.io/"]').count(), 0, `${route}: stale project prefix`);
     results.push({ route, title: await page.title() });

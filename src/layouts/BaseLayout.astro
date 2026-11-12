@@ -37,7 +37,7 @@ const nav = [
     <a class="skip-link" href="#main">본문으로 건너뛰기</a>
     <div class="site-shell">
       <header class="site-header">
-        <div class="sidebar-brand"><a class="wordmark" href="/" aria-label="민준호 홈">{profile.name}</a><span>개인 포트폴리오</span></div>
+        <div class="sidebar-brand"><a class="wordmark" href="/" aria-label="민준호 홈">{profile.name}</a><span>포트폴리오 · 블로그</span></div>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" hidden><span class="menu-label">메뉴 열기</span><span class="menu-icon" aria-hidden="true"><i></i><i></i></span></button>
         <nav id="primary-navigation" class="primary-nav" aria-label="주 메뉴">
           {nav.map(item => <a href={item.href} aria-current={(item.href === '/' ? path === '/' : path.startsWith(item.href)) ? 'page' : undefined}><NavIcon name={item.icon} /><span>{item.label}</span></a>)}
