@@ -2,6 +2,8 @@
 
 Astro + TypeScript + Supabase. 관리자 화면에서 글과 포트폴리오 내용을 수정합니다.
 
+UI/UX Pro Max를 적용한 대시보드 구성입니다. 왼쪽 탐색 메뉴와 프로필·작업·연구·이력·최근 글 패널을 사용하며, 모바일에서는 상단 메뉴와 한 열 배치로 전환합니다. 현재 시각 규칙은 [DESIGN.md](DESIGN.md)에 기록합니다.
+
 - `/admin/`: 이메일·비밀번호 로그인, 글·프로젝트·연구·이력·소개·프로필 관리
 - `/blog/`: 공개 글, 제목 검색, 더 보기
 - Supabase Auth / Postgres / Storage, 관리자만 쓰기 가능한 RLS

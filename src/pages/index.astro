@@ -1,52 +1,59 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Arrow from '../components/Arrow.astro';
 import { getWorks, workHref } from '../lib/works';
 import { profile } from '../data/profile';
 import { projectArt } from '../data/project-art';
 const works = (await getWorks()).filter(work => work.data.featured).slice(0, 3);
+const timeline = (await getCollection('timeline')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 ---
 <BaseLayout>
-  <div class="home-opening hero">
-    <section class="profile-summary" aria-labelledby="hero-title">
-      {profile.photo && <figure class="hero-portrait"><img src="/images/portfolio/portrait.webp" alt={profile.photo.alt} width="1281" height="1227" fetchpriority="high" decoding="async" /></figure>}
-      <h1 id="hero-title" class="marked-heading">{profile.name}</h1>
-      <div class="hero-intro"><p>{profile.intro.replace(', ', ',\n')}</p></div>
-      <p class="profile-school">{profile.school}<br class="mobile-only" /> 인공지능소프트웨어학과</p>
-      <div class="hero-links">
-        <a class="button-link" href="/projects/">만든 것들 <Arrow /></a>
-        <a class="outline-link" href="https://github.com/Juno31323" target="_blank" rel="noopener noreferrer">GitHub <Arrow direction="external" /></a>
+  <header class="dashboard-heading"><div><h1>한눈에 보기</h1><p>작업과 연구, 배운 것들의 기록.</p></div><a class="outline-link" href="/blog/">글 읽기 <Arrow /></a></header>
+  <div class="dashboard-grid">
+    <section class="profile-summary dashboard-panel hero" aria-labelledby="hero-title">
+      <div class="profile-overview">
+        {profile.photo && <figure class="hero-portrait"><img src="/images/portfolio/portrait.webp" alt={profile.photo.alt} width="1281" height="1227" fetchpriority="high" decoding="async" /></figure>}
+        <div><p class="profile-label">안녕하세요.</p><h2 id="hero-title">{profile.name}</h2><div class="hero-intro"><p>{profile.intro}</p></div><p class="profile-school">{profile.school} 인공지능소프트웨어학과</p></div>
       </div>
+      <div class="profile-bottom"><ul class="skill-tags" aria-label="주요 분야"><li>Backend</li><li>App</li><li>RAG</li></ul><div class="hero-links"><a class="button-link" href="/projects/">만든 것들 <Arrow /></a><a class="outline-link" href="https://github.com/Juno31323" target="_blank" rel="noopener noreferrer">GitHub <Arrow direction="external" /></a></div></div>
     </section>
-    <section id="selected-work" class="home-work-panel" aria-labelledby="selected-work-title">
-      <h2 id="selected-work-title" class="marked-heading">만든 것들</h2>
+    <section class="research-summary dashboard-panel" aria-labelledby="research-title">
+      <div class="panel-heading"><h2 id="research-title">연구 노트</h2><span class="panel-label">RAG · 정보검색</span></div>
+      <h3 id="rag-title">대학 공지 RAG, Chat2B-AU</h3>
+      <p>49개 문항으로 OCR과 레이아웃에 따른 검색 성능을 비교했습니다.</p>
+      <dl class="research-results">
+        <div><dt>텍스트 전용</dt><dd><strong>67.35%</strong><span class="result-track" aria-hidden="true"><i style="width:67.35%"></i></span></dd></div>
+        <div><dt>OCR 추가</dt><dd><strong>89.80%</strong><span class="result-track result-accent" aria-hidden="true"><i style="width:89.80%"></i></span></dd></div>
+      </dl>
+      <div class="research-foot"><span>Recall@5 · 검색 지표</span><a class="text-link" href="/research/university-notice-rag/">연구 상세 <Arrow /></a></div>
+      <p class="research-caveat">동일 필드·청크 배정에서는 레이아웃 표현의 추가 이점을 확인하지 못했습니다.</p>
+    </section>
+    <section id="selected-work" class="home-work-panel dashboard-panel" aria-labelledby="selected-work-title">
+      <div class="panel-heading"><h2 id="selected-work-title">만든 것들</h2><a class="text-link" href="/projects/">전체 보기 <Arrow /></a></div>
       <ul class="home-work-list">
-        {works.map((work, index) => {
+        {works.map(work => {
           const art = projectArt[work.id as keyof typeof projectArt];
-          return <li><a class:list={['work-row', 'home-work', { 'home-work-featured': index === 0 }]} href={workHref(work)}>
-            {art && <img class="home-work-art" src={art.src} alt={art.alt} width={art.width} height={art.height} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />}
-            <div class="home-work-copy"><h3>{work.data.title}</h3><p>{art?.subtitle ?? work.data.summary}</p></div>
-            <span class="work-arrow"><Arrow /></span>
+          return <li><a class="work-row home-work" href={workHref(work)}>
+            {art && <img class="home-work-art" src={art.src} alt={art.alt} width={art.width} height={art.height} loading="lazy" decoding="async" />}
+            <div class="home-work-copy"><h3>{work.data.title}</h3><p>{work.data.summary}</p></div>
+            <span class="work-category">{work.data.category}</span><span class="work-arrow"><Arrow /></span>
           </a></li>;
         })}
       </ul>
     </section>
-  </div>
-  <section class="research-ribbon" aria-labelledby="research-title">
-    <h2 id="research-title" class="marked-heading">연구와 발표</h2>
-    <p>OCR · 하이브리드 검색 · 검색 평가</p>
-    <a class="outline-link" href="/research/university-notice-rag/">연구 상세 <Arrow /></a>
-  </section>
-  <div class="home-notes section-block">
-    <section class="research-summary" aria-labelledby="rag-title">
-      <h2 id="rag-title">대학 공지 RAG, Chat2B-AU</h2>
-      <p>49개 문항으로 OCR과 레이아웃에 따른 검색 성능을 비교했습니다.</p>
-      <dl class="research-results"><div><dt>텍스트 전용 Recall@5</dt><dd>67.35%</dd></div><div><dt>OCR 추가 Recall@5</dt><dd>89.80%</dd></div></dl>
-      <p class="research-caveat">동일 필드·청크 배정에서는 레이아웃 표현의 추가 이점을 확인하지 못했습니다.</p>
-      <a class="text-link" href="/research/">연구 기록 읽기 <Arrow /></a>
+    <section class="dashboard-timeline dashboard-panel" aria-labelledby="timeline-title">
+      <div class="panel-heading"><h2 id="timeline-title">최근 이력</h2><a class="text-link" href="/timeline/">전체 <Arrow /></a></div>
+      <ol class="dashboard-timeline-list">{timeline.map(item => <li><a href="/timeline/"><time>{item.data.period}</time><h3>{item.data.title}</h3><span>{item.data.category}</span></a></li>)}</ol>
     </section>
-    <section class="interests" aria-labelledby="interests-title">
-      <h2 id="interests-title">관심과 학습 계획</h2>
+    <section class="dashboard-posts dashboard-panel" aria-labelledby="posts-title">
+      <div class="panel-heading"><h2 id="posts-title">최근 글</h2><a class="text-link" href="/blog/">전체 보기 <Arrow /></a></div>
+      <p class="dashboard-empty" data-home-posts-status role="status">최근 글을 불러오는 중입니다.</p>
+      <ul class="dashboard-post-list" data-home-posts></ul>
+      <noscript><p class="dashboard-empty">글은 글 목록에서 확인해 주세요.</p></noscript>
+    </section>
+    <section class="interests dashboard-panel" aria-labelledby="interests-title">
+      <div class="panel-heading"><h2 id="interests-title">관심과 학습</h2></div>
       <ul class="interest-list"><li><h3>RAG·정보검색</h3><p>OCR · 하이브리드 검색 · 검색 평가</p></li><li><h3>AI 시스템·MLOps</h3><p>운영·배포</p></li><li><h3>다음 공부</h3><p>SQLD · C · C++ · Rust</p></li></ul>
     </section>
   </div>

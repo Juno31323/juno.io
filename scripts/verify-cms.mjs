@@ -46,6 +46,8 @@ async function mock(context) {
         if (value.startsWith('in.')) data = data.filter(row => value.slice(3).replace(/[()]/g, '').split(',').includes(row[key]));
         if (value.startsWith('ilike.')) data = data.filter(row => row[key].toLowerCase().includes(value.slice(6).replaceAll('%', '').toLowerCase()));
       }
+      const orders = (url.searchParams.get('order') || '').split(',').filter(Boolean);
+      data.sort((a, b) => { for (const order of orders) { const [key, direction] = order.split('.'); const difference = typeof a[key] === 'number' ? a[key] - b[key] : String(a[key]).localeCompare(String(b[key])); if (difference) return direction === 'desc' ? -difference : difference; } return 0; });
       const offset = Number(url.searchParams.get('offset') || 0), limit = Number(url.searchParams.get('limit') || 1000);
       data = data.slice(offset, offset + limit); return json(single ? data[0] || null : data);
     }
@@ -57,13 +59,17 @@ try {
   const page = await context.newPage(); const errors = []; page.on('pageerror', error => errors.push(error.message));
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: 960 });
-    for (const route of ['/blog/', '/entry/?type=posts&slug=first-post', '/admin/']) {
+    for (const route of ['/', '/blog/', '/entry/?type=posts&slug=first-post', '/admin/']) {
       await page.goto(baseURL + route, { waitUntil: 'networkidle' });
       assert.equal(await page.locator('h1').count(), 1);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${width} ${route}: overflow`);
-      await page.screenshot({ path: `artifacts/cms/${route.startsWith('/entry') ? 'reader' : route.split('/')[1]}-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `artifacts/cms/${route === '/' ? 'dashboard' : route.startsWith('/entry') ? 'reader' : route.split('/')[1]}-${width}.png`, fullPage: true });
     }
   }
+  rows.push({ ...post, id: 'draft', slug: 'draft-post', title: '비공개 초안', status: 'draft' }, { ...post, id: 'future', slug: 'future-post', title: '미래 예약 글', published_at: '2999-01-01T00:00:00Z' });
+  await page.goto(baseURL + '/', { waitUntil: 'networkidle' });
+  assert.deepEqual(await page.locator('[data-home-posts] h3').allTextContents(), [post.title], 'Dashboard shows only currently published posts');
+  assert.equal(await page.locator('.dashboard-timeline-list > li').count(), 3);
   await page.goto(baseURL + '/entry/?type=posts&slug=first-post', { waitUntil: 'networkidle' });
   assert.equal(await page.locator('h1').textContent(), post.title);
   assert.equal(await page.evaluate(() => window.xss), undefined);

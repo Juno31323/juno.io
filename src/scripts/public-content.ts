@@ -12,7 +12,9 @@ function workRow(entry: Entry) {
   const main = text('div', '', 'work-main'); main.append(text('h3', entry.title), text('p', entry.summary));
   const meta = text('div', '', 'work-meta');
   [entry.metadata.category, entry.metadata.listRole, entry.metadata.status].filter(Boolean).forEach(value => meta.append(text('span', value)));
-  a.append(main, meta); li.append(a); return li;
+  const arrow = document.createElement('span'); arrow.className = 'work-arrow';
+  arrow.innerHTML = '<svg class="arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>';
+  a.append(main, meta, arrow); li.append(a); return li;
 }
 function bodyInto(element: Element | null, value: string) { if (element) element.innerHTML = markdown(value); }
 function applyDetail(entry: Entry, container: ParentNode = document) {
@@ -119,12 +121,12 @@ async function portfolio() {
     const { data, error } = await visibleEntries().in('kind', ['projects', 'research']).eq('featured', true).order('sort_order').limit(3);
     if (!error) {
       const list = document.querySelector('.home-work-list');
-      list?.replaceChildren(...(data || []).map((entry: Entry, index: number) => {
+      list?.replaceChildren(...(data || []).map((entry: Entry) => {
         const li = workRow(entry), a = li.querySelector('a')!; a.classList.add('home-work');
-        if (!index) a.classList.add('home-work-featured');
         const image = safeUrl(entry.metadata.cardImage);
         if (image) { const img = document.createElement('img'); img.src = image; img.alt = entry.metadata.cardAlt || entry.title; img.className = 'home-work-art'; a.prepend(img); }
-        a.querySelector('.work-main')?.classList.add('home-work-copy'); a.querySelector('.work-meta')?.remove(); return li;
+        a.querySelector('.work-main')?.classList.add('home-work-copy'); a.querySelector('.work-meta')?.remove();
+        a.insertBefore(text('span', entry.metadata.category || '', 'work-category'), a.querySelector('.work-arrow')); return li;
       }));
     }
   }
@@ -148,4 +150,29 @@ async function profile() {
   if (p.researchSummary) { const el = document.querySelector('.research-summary > p'); if (el) el.textContent = p.researchSummary; }
 }
 
-void Promise.allSettled([blog(), entryPage(), portfolio(), profile()]);
+async function homePosts() {
+  const list = document.querySelector('[data-home-posts]'), status = document.querySelector('[data-home-posts-status]');
+  if (!list || !status) return;
+  if (!supabase) { status.textContent = '아직 올린 글이 없습니다.'; return; }
+  try {
+    const { data, error } = await visibleEntries().eq('kind', 'posts').order('published_at', { ascending: false }).order('id').limit(3);
+    if (error) throw error;
+    list.replaceChildren(...(data || []).map((entry: Entry) => {
+      const li = document.createElement('li'), a = document.createElement('a'), time = document.createElement('time');
+      a.href = entryUrl(entry); time.dateTime = entry.published_at; time.textContent = dateLabel(entry.published_at);
+      a.append(text('h3', entry.title), time); li.append(a); return li;
+    }));
+    status.textContent = data?.length ? '' : '아직 올린 글이 없습니다.'; status.toggleAttribute('hidden', Boolean(data?.length));
+  } catch { status.textContent = '최근 글을 불러오지 못했습니다. 글 목록에서 다시 확인해 주세요.'; }
+}
+async function homeTimeline() {
+  const list = document.querySelector('.dashboard-timeline-list'); if (!list || !supabase) return;
+  const { data, error } = await visibleEntries().eq('kind', 'timeline').order('sort_order').limit(3);
+  if (error) return;
+  list.replaceChildren(...(data || []).map((entry: Entry) => {
+    const li = document.createElement('li'), a = document.createElement('a'); a.href = localUrl('/timeline/');
+    a.append(text('time', entry.metadata.period || ''), text('h3', entry.title), text('span', entry.metadata.category || ''));
+    li.append(a); return li;
+  }));
+}
+void Promise.allSettled([blog(), entryPage(), portfolio(), profile(), homePosts(), homeTimeline()]);

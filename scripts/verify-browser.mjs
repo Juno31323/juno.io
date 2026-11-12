@@ -108,7 +108,7 @@ try {
       assert.equal(await menu.evaluate(element => element === document.activeElement), true);
       await page.keyboard.press('Enter');
       await page.keyboard.press('Tab');
-      assert.equal(await nav.getByRole('link', { name: '저에 대해', exact: true }).evaluate(element => element === document.activeElement), true);
+      assert.equal(await nav.getByRole('link', { name: '한눈에 보기', exact: true }).evaluate(element => element === document.activeElement), true);
       await page.keyboard.press('Escape');
       await menu.click();
       await page.getByRole('button', { name: '메뉴 닫기' }).click();
