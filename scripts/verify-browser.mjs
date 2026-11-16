@@ -4,7 +4,7 @@ import { mkdir, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
 const baseURL = process.env.PREVIEW_URL || 'http://127.0.0.1:4321';
-const widths = [390, 768, 1440];
+const widths = [320, 390, 768, 1024, 1440];
 const projectRoutes = (await readdir('src/content/projects')).filter(file => file.endsWith('.md')).map(file => `/projects/${file.slice(0, -3)}/`);
 const researchRoutes = (await readdir('src/content/research')).filter(file => file.endsWith('.md')).map(file => `/research/${file.slice(0, -3)}/`);
 const routes = ['/', '/about/', '/projects/', '/research/', '/timeline/', ...projectRoutes, ...researchRoutes];
@@ -31,8 +31,9 @@ try {
       assert.deepEqual(brokenImages, [], `${route}: images load with alt text`);
       if (route === '/') {
         assert.equal(await page.locator('.hero-portrait img[src="/images/portfolio/portrait.webp"]').count(), 1, 'Home: prepared user portrait appears once');
-        assert.equal(await page.locator('.home-work-art').count(), 3, 'Each featured work has its illustration');
-        assert.deepEqual(await page.locator('.home-work').evaluateAll(elements => elements.map(element => element.getAttribute('href'))), ['/projects/firezone/', '/projects/printsafe/', '/research/university-notice-rag/']);
+        assert.equal(await page.locator('.feature-lead .firezone-flow').count(), 1, 'The lead project shows the documented data flow');
+        assert.deepEqual(await page.locator('.feature-card').evaluateAll(elements => elements.map(element => element.getAttribute('href'))), ['/projects/firezone/', '/projects/printsafe/', '/research/university-notice-rag/']);
+        assert.deepEqual(await page.locator('.focus-copy strong').allTextContents(), ['백엔드', '앱 개발', 'RAG 연구']);
       }
       if (route === '/about/') assert.equal(await page.locator('img[src="/images/min-junho.jpg"]').count(), 1, 'About: original user portrait appears once');
       assert.equal(await page.locator('h1').count(), 1, `${route}: single h1`);
@@ -47,16 +48,16 @@ try {
         return rect.width && (rect.left < -1 || rect.right > window.innerWidth + 1 || element.scrollWidth > element.clientWidth + 1);
       }).map(element => element.textContent));
       assert.deepEqual(clipped, [], `${route} ${width}px: clipped content`);
-      const smallTargets = await page.locator('.text-link, .outline-link, .footer-links a, .back-link').evaluateAll(elements => elements.filter(element => element.getBoundingClientRect().height < 43.5).map(element => ({ text: element.textContent, height: element.getBoundingClientRect().height })));
+      const smallTargets = await page.locator('.text-link, .outline-link, .footer-links a, .back-link, .focus-index a').evaluateAll(elements => elements.filter(element => element.getBoundingClientRect().height < 43.5).map(element => ({ text: element.textContent, height: element.getBoundingClientRect().height })));
       assert.deepEqual(smallTargets, [], `${route} ${width}px: navigation hit targets`);
       if (route === '/') {
-        assert.equal(await page.locator('.hero-links .button-link').getAttribute('href'), '/projects/', 'Work is the primary action');
-        assert.equal(await page.locator('.work-row').count(), 3, 'Home has three selected works');
-        assert.equal(await page.locator('#selected-work h2').innerText(), '만든 것들');
+        assert.equal(await page.locator('.hero-links .button-link').getAttribute('href'), '#selected-work', 'Work is the primary action');
+        assert.equal(await page.locator('.feature-card').count(), 3, 'Home has three selected works');
+        assert.equal(await page.locator('#selected-work h2').innerText(), '대표 작업');
         assert.equal(await page.locator('.footer-links a[href="https://github.com/Juno31323"]').count(), 1, 'Provided public GitHub link');
-        const geometry = await page.evaluate(() => ({ width: window.innerWidth, firstWorkY: document.querySelector('.work-row').getBoundingClientRect().top, heroHeight: document.querySelector('.hero').getBoundingClientRect().height, fontLoaded: document.fonts.check('16px "Pretendard Variable"') }));
+        const geometry = await page.evaluate(() => ({ width: window.innerWidth, firstWorkY: document.querySelector('.feature-card').getBoundingClientRect().top, heroHeight: document.querySelector('.portfolio-hero').getBoundingClientRect().height, fontLoaded: document.fonts.check('16px "Pretendard Variable"') }));
         assert.equal(geometry.fontLoaded, true, 'Self-hosted font is loaded');
-        if (width === 390) assert.ok(geometry.firstWorkY < 1050, 'Mobile work appears sooner than the previous 1348px');
+        if (width === 390) assert.ok(geometry.firstWorkY < 740, 'Mobile users see the first project after a short introduction');
         results.push({ homepageGeometry: geometry });
       }
       const hrefs = await page.locator('a').evaluateAll(elements => elements.map(element => element.getAttribute('href')));
@@ -108,7 +109,7 @@ try {
       assert.equal(await menu.evaluate(element => element === document.activeElement), true);
       await page.keyboard.press('Enter');
       await page.keyboard.press('Tab');
-      assert.equal(await nav.getByRole('link', { name: '한눈에 보기', exact: true }).evaluate(element => element === document.activeElement), true);
+      assert.equal(await nav.getByRole('link', { name: '홈', exact: true }).evaluate(element => element === document.activeElement), true);
       await page.keyboard.press('Escape');
       await menu.click();
       await page.getByRole('button', { name: '메뉴 닫기' }).click();
@@ -117,7 +118,7 @@ try {
       await page.locator('h1').click();
       assert.equal(await nav.isVisible(), false, 'Outside click closes menu');
       await menu.click();
-      await nav.getByRole('link', { name: '만든 것들', exact: true }).click();
+      await nav.getByRole('link', { name: '프로젝트', exact: true }).click();
       await page.waitForURL('**/projects/');
       assert.equal(await page.getByRole('navigation', { name: '주 메뉴' }).isVisible(), false);
       results.push({ width, mobileMenu: 'click, close, Escape, keyboard, outside click, navigation passed' });
@@ -126,7 +127,8 @@ try {
       assert.equal(await page.getByRole('navigation', { name: '주 메뉴' }).isVisible(), true);
     }
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    assert.equal(await page.locator('.work-row').first().evaluate(element => getComputedStyle(element).transitionDuration), '0s');
+    await page.goto(baseURL);
+    assert.equal(await page.locator('.hero-main').evaluate(element => getComputedStyle(element).animationName), 'none');
     assert.deepEqual(errors, [], `${width}px: browser errors`);
     await page.close();
   }
@@ -154,7 +156,7 @@ try {
   const noJSPage = await noJS.newPage();
   await noJSPage.goto(baseURL);
   assert.equal(await noJSPage.getByRole('navigation', { name: '주 메뉴' }).isVisible(), true);
-  await noJSPage.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '만든 것들', exact: true }).click();
+  await noJSPage.getByRole('navigation', { name: '주 메뉴' }).getByRole('link', { name: '프로젝트', exact: true }).click();
   assert.ok(noJSPage.url().endsWith('/projects/'));
   results.push({ javaScriptDisabled: 'Navigation and static content passed', internalLinks: internalLinks.size, notFound: 'HTTP 404 + custom page passed', uniquePageTitles: titles.size });
   await noJS.close();

@@ -73,6 +73,15 @@ try {
   await page.goto(baseURL + '/', { waitUntil: 'networkidle' });
   assert.deepEqual(await page.locator('[data-home-posts] h3').allTextContents(), [post.title], 'Dashboard shows only currently published posts');
   assert.equal(await page.locator('.dashboard-timeline-list > li').count(), 3);
+  const featured = rows.find(entry => entry.slug === 'firezone');
+  const priorSummary = featured.summary;
+  featured.summary = 'CMS에서 관리하는 대표 작업 요약';
+  await page.reload({ waitUntil: 'networkidle' });
+  const lead = page.locator('.feature-lead .feature-card');
+  assert.match(await lead.innerText(), /CMS에서 관리하는 대표 작업 요약/);
+  assert.equal(await lead.locator('.firezone-flow').count(), 1);
+  assert.deepEqual(await lead.locator('.keyword-list li').allTextContents(), ['React Native', 'NestJS']);
+  featured.summary = priorSummary;
   await page.goto(baseURL + '/entry/?type=posts&slug=first-post', { waitUntil: 'networkidle' });
   assert.equal(await page.locator('h1').textContent(), post.title);
   assert.equal(await page.evaluate(() => window.xss), undefined);

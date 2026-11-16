@@ -4,9 +4,9 @@ import Arrow from '../components/Arrow.astro';
 import { profile } from '../data/profile';
 ---
 <BaseLayout title="저에 대해" description="민준호의 국비 웹 개발 교육과 부트캠프, 엘비에스테크 AI 데이터 정제 활동, 안산대학교 수업·실습.">
-  <header class="page-header"><h1>저에 대해<span class="accent-dot">.</span></h1></header>
+  <header class="page-header"><p class="page-index" lang="en">PROFILE</p><h1>저에 대해</h1><p class="page-lead" data-profile-intro>{profile.intro}</p></header>
   <div class="article-layout about-layout">
-    <aside class="article-aside"><span class="aside-label">민준호</span><p>안산대학교<br />인공지능소프트웨어학과</p>{profile.photo && <img class="profile-photo" src={profile.photo.src} alt={profile.photo.alt} width="658" height="846" loading="lazy" decoding="async" />}</aside>
+    <aside class="article-aside"><span class="aside-label">민준호</span><p>안산대학교<br />인공지능소프트웨어학과</p>{profile.photo && <img class="profile-photo" src={profile.photo.src} alt={profile.photo.alt} width="658" height="846" loading="lazy" decoding="async" />}<ul class="keyword-list" aria-label="주요 분야"><li>백엔드</li><li>앱 개발</li><li>RAG 연구</li></ul></aside>
     <article class="prose">
       <h2>대학에 오기 전</h2>
       <p>검정고시 이후 2024년 국비 웹 개발 교육에서 Java·Spring을 배웠습니다. 이커머스·LMS 팀 프로젝트와 공통 인증 API를 구현했습니다.</p>

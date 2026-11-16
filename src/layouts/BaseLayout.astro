@@ -2,7 +2,6 @@
 import '../styles/global.css';
 import { profile } from '../data/profile';
 import Arrow from '../components/Arrow.astro';
-import NavIcon from '../components/NavIcon.astro';
 import '../styles/dashboard.css';
 interface Props { title?: string; description?: string; noindex?: boolean; }
 const { title, description = '안산대학교 인공지능소프트웨어학과 민준호. 백엔드·앱 프로젝트와 대학 공지 RAG 연구.' } = Astro.props;
@@ -10,12 +9,12 @@ const pageTitle = title ? `${title} — ${profile.name}` : `${profile.name} — 
 const prefix = import.meta.env.BASE_URL.replace(/\/$/, '');
 const path = prefix && Astro.url.pathname.startsWith(prefix + '/') ? Astro.url.pathname.slice(prefix.length) : Astro.url.pathname;
 const nav = [
-  { href: '/', label: '한눈에 보기', icon: 'home' },
-  { href: '/projects/', label: '만든 것들', icon: 'folder' },
-  { href: '/research/', label: '연구와 발표', icon: 'research' },
-  { href: '/blog/', label: '글', icon: 'file' },
-  { href: '/timeline/', label: '전체 이력', icon: 'history' },
-  { href: '/about/', label: '저에 대해', icon: 'user' },
+  { href: '/', label: '홈' },
+  { href: '/projects/', label: '프로젝트' },
+  { href: '/research/', label: '연구' },
+  { href: '/timeline/', label: '이력' },
+  { href: '/blog/', label: '블로그' },
+  { href: '/about/', label: '소개' },
 ];
 ---
 <!doctype html>
@@ -24,7 +23,7 @@ const nav = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#FFFFFF" />
+    <meta name="theme-color" content="#faf9f6" />
     {Astro.props.noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
@@ -37,12 +36,11 @@ const nav = [
     <a class="skip-link" href="#main">본문으로 건너뛰기</a>
     <div class="site-shell">
       <header class="site-header">
-        <div class="sidebar-brand"><a class="wordmark" href="/" aria-label="민준호 홈">{profile.name}</a><span>포트폴리오 · 블로그</span></div>
+        <a class="site-brand" href="/"><span class="wordmark">{profile.name}</span><span class="brand-label" lang="en">/ JUNO.IO</span></a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" hidden><span class="menu-label">메뉴 열기</span><span class="menu-icon" aria-hidden="true"><i></i><i></i></span></button>
         <nav id="primary-navigation" class="primary-nav" aria-label="주 메뉴">
-          {nav.map(item => <a href={item.href} aria-current={(item.href === '/' ? path === '/' : path.startsWith(item.href)) ? 'page' : undefined}><NavIcon name={item.icon} /><span>{item.label}</span></a>)}
+          {nav.map(item => <a href={item.href} aria-current={(item.href === '/' ? path === '/' : path.startsWith(item.href)) ? 'page' : undefined}>{item.label}</a>)}
         </nav>
-        <div class="sidebar-bottom"><a href="/admin/"><NavIcon name="settings" />사이트 관리</a><span>백엔드 · 앱 · RAG</span></div>
       </header>
       <main id="main" tabindex="-1"><slot /></main>
       <footer class="site-footer">

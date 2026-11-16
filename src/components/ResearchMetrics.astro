@@ -1,0 +1,20 @@
+<div class="research-evidence">
+  <p class="metric-label">Recall@5 · 검색 지표</p>
+  <dl class="research-results">
+    <div><dt>텍스트 전용</dt><dd><strong>67.35%</strong><span class="result-track" aria-hidden="true"><i style="--result:67.35%"></i></span></dd></div>
+    <div><dt>OCR 추가</dt><dd><strong>89.80%</strong><span class="result-track result-accent" aria-hidden="true"><i style="--result:89.80%"></i></span></dd></div>
+  </dl>
+  <p class="research-caveat">동일 필드·청크 배정에서는 레이아웃 표현의 추가 이점을 확인하지 못했습니다.</p>
+</div>
+<style>
+  .metric-label { color: var(--accent); font-size: .75rem; font-weight: 700; }
+  .research-results { display: grid; gap: 9px; border: 0; margin-block: 8px 10px; }
+  .research-results > div { display: block; border: 0; padding: 0; }
+  .research-results dt { color: var(--muted); font-size: .8125rem; }
+  .research-results dd { display: flex; flex-direction: row-reverse; align-items: center; gap: 12px; font-size: 1rem; }
+  .research-results strong { min-width: 63px; text-align: right; }
+  .result-track { display: block; flex: 1; height: 7px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+  .result-track i { display: block; width: var(--result); height: 100%; background: #a2acc3; }
+  .result-accent i { background: var(--accent); }
+  .research-caveat { color: var(--muted); font-size: .8125rem; line-height: 1.55; }
+</style>

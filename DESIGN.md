@@ -1,67 +1,108 @@
-# 민준호 포트폴리오 — 대시보드 디자인
+---
+name: Juno.io Editorial Minimalist
+colors:
+  canvas-warm: "#FAF9F6"
+  surface-raised: "#FFFFFF"
+  surface-low: "#F4F3F1"
+  ink-primary: "#19212F"
+  ink-secondary: "#4B5565"
+  primary: "#465ED0"
+  accent-hover: "#374CB8"
+  accent-soft: "#EDF0FF"
+  border-subtle: "#E5E7EB"
+  border-hairline: "#EEEEEC"
+typography:
+  display-desktop:
+    fontFamily: Pretendard Variable
+    fontSize: 60px
+    lineHeight: 1.13
+    fontWeight: 780
+    letterSpacing: -0.04em
+  display-mobile:
+    fontFamily: Pretendard Variable
+    fontSize: 40px
+    lineHeight: 1.13
+    fontWeight: 780
+    letterSpacing: -0.04em
+  body-md:
+    fontFamily: Pretendard Variable
+    fontSize: 16px
+    lineHeight: 1.75
+  label-sm:
+    fontFamily: Pretendard Variable
+    fontSize: 12px
+    fontWeight: 680
+rounded:
+  control: 4px
+  panel: 8px
+spacing:
+  content-width: 1140px
+  touch-size: 44px
+  margin-mobile: 20px
+  margin-desktop: 64px
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.surface-raised}"
+    rounded: "{rounded.control}"
+    height: "{spacing.touch-size}"
+  project-card:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink-primary}"
+    rounded: "{rounded.panel}"
+  page:
+    backgroundColor: "{colors.canvas-warm}"
+    textColor: "{colors.ink-primary}"
+  keyword-hover:
+    backgroundColor: "{colors.accent-soft}"
+    textColor: "{colors.ink-primary}"
+  button-primary-hover:
+    backgroundColor: "{colors.accent-hover}"
+    textColor: "{colors.surface-raised}"
+  flow-panel:
+    backgroundColor: "{colors.surface-low}"
+    textColor: "{colors.ink-secondary}"
+  card-divider:
+    backgroundColor: "{colors.border-subtle}"
+    height: 1px
+  navigation-divider:
+    backgroundColor: "{colors.border-hairline}"
+    height: 1px
+---
 
-2026-11-12. UI/UX Pro Max를 적용한 전체 디자인 변경. [스킬 출처](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill).
+## Overview
 
-## 방향
+민준호 개인 포트폴리오와 글을 위한 편집형 디자인. Google Stitch의 Editorial Minimalist 내보내기에서 홈 데스크톱 `_8`, 모바일 `_4`, 프로젝트 `_3` 및 `firezone`, 연구·소개·이력·글 시안을 참고했다. 구현 대상은 저장소 루트의 Astro 사이트다.
 
-개인 작업과 연구를 한눈에 읽는 대시보드. 밝은 회색 바탕, 흰색 패널, 파란색 탐색 강조, 작은 선 아이콘을 사용한다. 큰 유기적 배경과 강조 밑줄은 사용하지 않는다. 사진·실제 작업·짧은 글이 중심이며, 방문 수·활동량·온라인 상태 등 확인되지 않은 데이터를 만들지 않는다.
+## Colors
 
-UI/UX Pro Max의 검색 결과에서 Minimalism & Swiss Style, 밝은 중성색과 파란색 강조, 키보드 탐색과 고정 메뉴의 콘텐츠 가림 방지 가이드를 적용했다. Enterprise Gateway와 Scroll-Triggered Storytelling 추천은 개인 대시보드와 맞지 않아 채택하지 않았다. 페이지 구성은 프로젝트에 맞게 설계했다. 한국어 본문은 기존의 자체 호스팅 Pretendard를 유지한다.
+따뜻한 흰색을 바탕으로 사용한다. 카드는 흰색과 1px 경계선, 제목은 짙은 잉크색, 주요 링크와 선택 상태는 파란색으로 구분한다.
 
-## 색상
+## Typography
 
-| 토큰 | 값 | 용도 |
-| --- | --- | --- |
-| paper | #ffffff | 패널·사이드바 |
-| page-background | #f6f7f9 | 페이지 바탕 |
-| ink | #19212f | 제목·본문 |
-| accent | #465ed0 | 선택 메뉴·주요 버튼·OCR 막대 |
-| accent-hover | #3549b0 | 주요 버튼 hover |
-| muted | #626d7e | 설명·날짜·부가 정보 |
-| line | #e3e7ee | 패널 경계·행 구분 |
-| surface | #f6f8fb | 보조 표면·태그 |
-| lavender | #edf1ff | 선택 메뉴 바탕 |
-| portrait-mat | #eef1f7 | 사진 바탕 |
+Stitch 시안의 글자 위계를 유지하되 한글과 영문 모두 기존 자체 호스팅 Pretendard Variable을 사용한다. 작은 라벨은 날짜·카테고리·기술 구분에만 사용한다.
 
-## 레이아웃·타입
+## Layout
 
-- 데스크톱 사이드바 224px, 1200px 이하 200px. 내용은 해당 너비만큼 옆으로 배치한다.
-- 760px 이하에서는 상단 메뉴로 전환한다. JavaScript 없이도 메뉴 링크가 보이며, JS가 있으면 접기·펼치기와 Escape를 지원한다.
-- 홈은 프로필/연구, 작업/이력, 최근 글/학습의 두 열 그리드. 1000px 이하에서 한 열로 전환한다.
-- 패널 간격 22px, 작은 화면 16px. 패널 padding 24px, 모바일 20px. 모서리 12px, 컨트롤 8px.
-- 한글 글꼴 Pretendard Variable, 본문 기본 16px. 제목 24–30px, 패널 제목 16–17px, 보조 정보 최소 12px.
-- 본문은 기존 prose 구조와 표를 유지하며, 긴 글은 읽기 너비를 제한한다.
-- 버튼·탐색 링크의 클릭 높이는 최소 44px. 초점 표시를 유지하고 움직임 감소 설정을 존중한다.
+최대 너비 1140px 안에서 헤더·본문·푸터의 좌우 시작점을 맞춘다. 데스크톱은 64px 상단 탐색, 모바일은 열고 닫는 두 열 메뉴를 사용한다. 홈은 이름·사진, 연결된 키워드 세 개, 넓은 대표 작업과 두 개의 보조 작업, 연구·최근 글, 이력 순서다. 작은 화면에서는 프로젝트와 글을 한 열로 배치한다.
 
-## 콘텐츠와 동작
+## Elevation & Depth
 
-프로필·대표 작업·연구 요약·학습 계획은 기존 Supabase 관리 데이터에 연결한다. 홈에 최근 공개 글 최대 3건과 정렬 순서에 따른 이력 3건을 표시한다. 글이 없으면 짧은 빈 상태를 표시하고, 조회 실패는 글 목록으로 안내한다. 초안·보관·미래 예약 글은 공개 조회에서 제외한다.
+패널은 그림자 대신 배경 면과 가는 선으로 구분한다. 마우스를 올리면 카드 경계와 제목 색이 바뀐다. Taste에서 적용한 움직임은 짧은 첫 화면 등장과 버튼 반응이며 움직임 감소 설정을 존중한다.
 
-Recall@5 67.35%와 89.80%는 기존 연구의 검색 지표다. 막대는 비교를 보조하며, 수치·라벨·근거 링크·추가 이점 미확인 문장을 함께 유지한다.
+## Shapes
 
-글 작성·프로필 수정·업로드·권한·배포 URL은 기존 기능을 유지한다. 도메인은 https://juno31323.me/이며 루트 경로로 배포한다.
+컨트롤과 태그는 4px, 카드와 기사 컨테이너는 8px. 버튼과 메뉴의 터치 높이는 44px 이상으로 유지한다.
 
-## 구현 파일
+## Components
 
-- `src/styles/global.css`: 기본 타이포그래피·문서·기존 공통 스타일.
-- `src/styles/dashboard.css`: 새 색상과 공통 셸·사이드바·패널·반응형.
-- `src/styles/cms.css`: 관리자 편집 폼과 블로그.
-- `src/layouts/BaseLayout.astro`: 공통 탐색·모바일 메뉴·푸터.
-- `src/components/NavIcon.astro`: 같은 선 굵기의 장식용 SVG 아이콘.
-- `src/pages/index.astro`: 대시보드 기본 콘텐츠.
-- `src/scripts/public-content.ts`: Supabase 공개 데이터 갱신.
+- 키워드 탐색: 백엔드 → 인증 API, 앱 개발 → Firezone, RAG 연구 → 홈 연구 노트.
+- Firezone: 공개 프로젝트에 문서화된 공공데이터, NestJS API, Expo 앱을 도식으로 배치한다.
+- 연구 비교: Recall@5 67.35% / 89.80%와 레이아웃 표현의 추가 이점 미확인 조건을 함께 표시한다.
+- 글: 목록은 읽는 순서대로 쌓고 기존 검색·태그·시리즈·정렬 및 관리자 편집을 유지한다.
 
-## 블로그와 작성 화면
+## Do's and Don'ts
 
-Velog의 [발행 미리보기](https://github.com/velopert/velog-client/blob/master/src/components/write/PublishPreview.tsx)와 [Markdown 작성 흐름](https://github.com/velopert/velog-client/blob/master/src/containers/write/MarkdownEditorContainer.tsx), Notion의 [서식·슬래시 메뉴](https://www.notion.com/help/writing-and-editing-basics)를 참고한다. 기존 Markdown 저장 형식을 유지하고 작성 도구를 확장하며, Notion의 전체 블록 편집기를 복제하지 않는다.
-
-- 작성: 넓은 제목·본문, 서식 도구, 빈 줄의 `/` 메뉴, 글 틀, 작성/나란히/미리보기, 집중 모드. 발행 정보는 접는 패널로 분리한다.
-- 보관: 브라우저에 계정·기록별 기기 사본을 보관하고, 복구는 명시적으로 선택한다. 서버 저장·공개 여부와 기기 보관 상태를 구분한다. 저장 충돌과 실패 시 입력을 보존한다.
-- 분류: `entries.metadata`에 tags/series/coverImage/coverAlt/readingMinutes를 저장한다. 기존 글에는 기본값을 적용하며 스키마나 권한 변경은 없다.
-- 목록: 기존 대시보드 셸 안에 태그 탐색, 검색·정렬, 글 카드, 시리즈를 배치한다. 필터는 URL에 남고 빈 상태·조회 실패·재시도를 제공한다.
-- 읽기: 본문 너비를 제한하고, 목차·태그·읽기 시간·커버·코드 및 링크 복사·시리즈 이동을 제공한다. 좁은 화면의 목차는 본문 앞에 표시한다.
-- UI/UX Pro Max의 Error Recovery 가이드에 따라 오류 메시지에 복구 방법을 함께 표시한다. 버튼과 입력 도구는 키보드와 터치로 사용할 수 있어야 한다.
-
-## 검증 범위
-
-빌드·리소스 검사, 공개 페이지·상세 페이지의 반응형/키보드/JS 없는 메뉴, 관리자 편집과 오류 시 입력 유지, 홈의 공개 글 필터를 확인한다. 실제 개인 정보나 발행 내용을 변경하는 검증은 하지 않는다.
+- 실제 사진·작업·연구 결과·공개 글을 사용한다. 시안의 예시 제목, 가짜 앱 화면, 통계, 연락처를 가져오지 않는다.
+- 정적 콘텐츠와 Supabase에서 갱신되는 콘텐츠는 같은 카드 구조를 사용한다. 기존 URL과 작성 기능을 유지한다.
+- 긴 소개는 별도 페이지에 두고 홈에는 이름과 한 문장, 기술 키워드부터 제공한다.

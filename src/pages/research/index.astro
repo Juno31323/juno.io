@@ -2,9 +2,10 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WorkList from '../../components/WorkList.astro';
+import ResearchMetrics from '../../components/ResearchMetrics.astro';
 const works = (await getCollection('research')).sort((a, b) => a.data.order - b.data.order);
 ---
 <BaseLayout title="연구와 발표" description="Chat2B-AU와 대학 공지 문서의 OCR·레이아웃 구조화에 따른 검색 성능 분석.">
-  <header class="page-header"><h1>연구와 발표<span class="accent-dot">.</span></h1></header>
-  <section aria-label="연구 기록"><WorkList works={works} /></section>
+  <header class="page-header"><p class="page-index" lang="en">RESEARCH</p><h1>연구와 발표</h1><p class="page-lead">대학 공지 RAG · OCR · 검색 평가</p></header>
+  <section class="research-index" aria-label="연구 기록"><WorkList works={works} /><ResearchMetrics /></section>
 </BaseLayout>

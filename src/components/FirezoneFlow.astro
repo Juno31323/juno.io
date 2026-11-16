@@ -1,0 +1,14 @@
+<div class="firezone-flow" aria-label="Firezone 데이터 흐름">
+  <span class="flow-label">데이터 흐름</span>
+  <div class="flow-steps">
+    <span>공공데이터</span><i aria-hidden="true">→</i><span>NestJS API</span><i aria-hidden="true">→</i><span>Expo 앱</span>
+  </div>
+</div>
+<style>
+  .firezone-flow { padding: clamp(12px,2.5vw,24px); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+  .flow-label { display: block; color: var(--muted); font-size: .75rem; font-weight: 680; margin-bottom: 12px; }
+  .flow-steps { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: clamp(3px,.65vw,9px); }
+  .flow-steps > span { display: grid; place-items: center; min-height: 42px; padding: 4px; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; text-align: center; font-size: clamp(.6875rem,1.2vw,.875rem); font-weight: 650; line-height: 1.25; }
+  .flow-steps > span:nth-of-type(2) { color: var(--accent); border-color: var(--accent); }
+  .flow-steps > i { color: var(--muted); font-style: normal; }
+</style>

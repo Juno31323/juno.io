@@ -2,17 +2,59 @@ import { supabase } from '../lib/supabase';
 import { type Entry, entryUrl, localUrl, dateLabel, safeUrl } from '../lib/cms';
 import { markdown } from '../lib/markdown';
 import { setupBlog, enhanceReader } from './blog-content';
+import { workKeywords } from '../lib/work-keywords';
+import { projectArt } from '../data/project-art';
 
 const text = (tag: string, value: string, className = '') => {
   const el = document.createElement(tag); el.textContent = value; el.className = className; return el;
 };
 const visibleEntries = () => supabase!.from('entries').select('*').eq('status', 'published').lte('published_at', new Date().toISOString());
+function keywords(entry: Entry) {
+  const values = workKeywords(entry.metadata.listRole, entry.slug);
+  if (!values.length) return null;
+  const list = text('ul', '', 'keyword-list');
+  list.setAttribute('aria-label', '기술');
+  list.append(...values.map(value => text('li', value)));
+  return list;
+}
+function featuredCard(entry: Entry, index: number) {
+  const li = text('li', '', index === 0 ? 'feature-lead' : '');
+  const link = document.createElement('a');
+  link.className = 'feature-card';
+  link.href = entryUrl(entry);
+  const copy = text('div', '', 'feature-copy');
+  const title = text('div', '', 'feature-title');
+  const arrow = text('span', '↗');
+  arrow.setAttribute('aria-hidden', 'true');
+  title.append(text('h3', entry.title), arrow);
+  copy.append(text('p', entry.metadata.category || '', 'feature-category'), title);
+  if (entry.summary) copy.append(text('p', entry.summary, 'feature-summary'));
+  const list = keywords(entry);
+  if (list) copy.append(list);
+  link.append(copy);
+  const imageUrl = safeUrl(entry.metadata.cardImage);
+  const legacyArt = projectArt[entry.slug as keyof typeof projectArt];
+  const flow = document.querySelector<HTMLTemplateElement>('[data-firezone-flow]');
+  if (imageUrl && imageUrl !== safeUrl(legacyArt?.src)) {
+    const image = document.createElement('img');
+    image.className = 'feature-asset';
+    image.src = imageUrl;
+    image.alt = entry.metadata.cardAlt || entry.title;
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    link.append(image);
+  } else if (entry.kind === 'projects' && entry.slug === 'firezone' && flow) link.append(flow.content.cloneNode(true));
+  li.append(link);
+  return li;
+}
 function workRow(entry: Entry) {
   const li = document.createElement('li'); const a = document.createElement('a');
   a.className = 'work-row'; a.href = entryUrl(entry);
-  const main = text('div', '', 'work-main'); main.append(text('h3', entry.title), text('p', entry.summary));
+  const main = text('div', '', 'work-main'); main.append(text('h2', entry.title));
+  if (entry.metadata.showSummary !== false && entry.summary) main.append(text('p', entry.summary));
+  const list = keywords(entry); if (list) main.append(list);
   const meta = text('div', '', 'work-meta');
-  [entry.metadata.category, entry.metadata.listRole, entry.metadata.status].filter(Boolean).forEach(value => meta.append(text('span', value)));
+  [entry.metadata.category, entry.metadata.status, entry.metadata.period].filter(Boolean).forEach(value => meta.append(text('span', value)));
   const arrow = document.createElement('span'); arrow.className = 'work-arrow';
   arrow.innerHTML = '<svg class="arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>';
   a.append(main, meta, arrow); li.append(a); return li;
@@ -32,6 +74,28 @@ function applyDetail(entry: Entry, container: ParentNode = document) {
     for (const [key, label] of [['category', '분야'], ['role', '맡은 일'], ['period', '기간'], ['status', '상태']]) {
       if (entry.metadata[key]) { const row = document.createElement('div'); row.append(text('dt', label), text('dd', entry.metadata[key])); dl.append(row); }
     }
+  }
+  const detailKeywords = container.querySelector('[data-detail-keywords]');
+  if (detailKeywords) {
+    const tags = workKeywords(entry.metadata.listRole, entry.slug);
+    detailKeywords.replaceChildren(...tags.map(value => text('li', value)));
+    detailKeywords.toggleAttribute('hidden', !tags.length);
+  }
+  const links = container.querySelector('[data-work-links]');
+  if (links && Array.isArray(entry.metadata.links)) {
+    links.replaceChildren();
+    for (const item of entry.metadata.links) {
+      const url = safeUrl(item?.url);
+      if (!url || typeof item?.label !== 'string' || !item.label.trim()) continue;
+      const link = document.createElement('a');
+      link.className = 'outline-link';
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = item.label;
+      links.append(link);
+    }
+    links.toggleAttribute('hidden', links.childElementCount === 0);
   }
   const article = container.querySelector('.prose');
   if (article) for (const link of entry.metadata.links || []) {
@@ -63,13 +127,17 @@ async function portfolio() {
   if (detail) {
     const { data, error } = await visibleEntries().eq('kind', detail.dataset.workKind!).eq('slug', detail.dataset.workId!).maybeSingle();
     if (!error && data) applyDetail(data);
-    else if (!error) { document.querySelector('.detail-header')!.innerHTML = '<h1>공개된 기록이 없습니다.</h1>'; document.querySelector('.work-article')?.replaceChildren(); document.querySelector('.work-image')?.remove(); }
+    else if (!error) { document.querySelector('.detail-header')!.innerHTML = '<h1>공개된 기록이 없습니다.</h1>'; document.querySelectorAll('.work-article, .work-image, .work-feature').forEach(el => el.remove()); }
   }
   if (['/projects/', '/research/'].includes(path)) {
     let query = visibleEntries().order('sort_order');
     query = path === '/projects/' ? query.in('kind', ['projects', 'research']) : query.eq('kind', 'research');
     const { data, error } = await query;
-    if (!error) { const list = document.querySelector('.work-list'); list?.replaceChildren(...(data || []).map(workRow)); const count = document.querySelector('.list-topline span'); if (count) count.textContent = `총 ${data?.length || 0}개`; }
+    if (!error) {
+      const list = document.querySelector('.work-list'); list?.replaceChildren(...(data || []).map(workRow));
+      const count = document.querySelector('.list-topline span'); if (count) count.textContent = `총 ${data?.length || 0}개`;
+      document.querySelector('.research-index .research-evidence')?.toggleAttribute('hidden', !data?.some(entry => entry.slug === 'university-notice-rag'));
+    }
   }
   if (path === '/about/') {
     const { data } = await visibleEntries().eq('kind', 'pages').eq('slug', 'about').maybeSingle();
@@ -90,14 +158,9 @@ async function portfolio() {
   if (path === '/') {
     const { data, error } = await visibleEntries().in('kind', ['projects', 'research']).eq('featured', true).order('sort_order').limit(3);
     if (!error) {
-      const list = document.querySelector('.home-work-list');
-      list?.replaceChildren(...(data || []).map((entry: Entry) => {
-        const li = workRow(entry), a = li.querySelector('a')!; a.classList.add('home-work');
-        const image = safeUrl(entry.metadata.cardImage);
-        if (image) { const img = document.createElement('img'); img.src = image; img.alt = entry.metadata.cardAlt || entry.title; img.className = 'home-work-art'; a.prepend(img); }
-        a.querySelector('.work-main')?.classList.add('home-work-copy'); a.querySelector('.work-meta')?.remove();
-        a.insertBefore(text('span', entry.metadata.category || '', 'work-category'), a.querySelector('.work-arrow')); return li;
-      }));
+      const list = document.querySelector('[data-featured-works]');
+      list?.replaceChildren(...(data || []).map(featuredCard));
+      document.querySelector('[data-featured-empty]')?.toggleAttribute('hidden', Boolean(data?.length));
     }
   }
 }
@@ -108,7 +171,7 @@ async function profile() {
   if (!data) return;
   const p = data.data;
   for (const selector of ['.wordmark', '.footer-name', '#hero-title', '.aside-label']) { const el = document.querySelector(selector); if (el) el.textContent = p.name; }
-  const intro = document.querySelector('.hero-intro p'); if (intro) intro.textContent = p.intro;
+  document.querySelectorAll('.hero-intro p, [data-profile-intro]').forEach(el => el.textContent = p.intro);
   for (const selector of ['.profile-school', '.site-footer > p', '.article-aside > p']) { const el = document.querySelector(selector); if (el) el.textContent = `${p.school} ${p.major}`; }
   for (const [selector, src] of [['.hero-portrait img', p.heroPhoto], ['.profile-photo', p.photo]]) {
     const image = document.querySelector<HTMLImageElement>(selector); const url = safeUrl(src);
@@ -130,7 +193,9 @@ async function homePosts() {
     list.replaceChildren(...(data || []).map((entry: Entry) => {
       const li = document.createElement('li'), a = document.createElement('a'), time = document.createElement('time');
       a.href = entryUrl(entry); time.dateTime = entry.published_at; time.textContent = dateLabel(entry.published_at);
-      a.append(text('h3', entry.title), time); li.append(a); return li;
+      a.append(time, text('h3', entry.title));
+      if (entry.summary) a.append(text('p', entry.summary, 'post-summary'));
+      li.append(a); return li;
     }));
     status.textContent = data?.length ? '' : '아직 올린 글이 없습니다.'; status.toggleAttribute('hidden', Boolean(data?.length));
   } catch { status.textContent = '최근 글을 불러오지 못했습니다. 글 목록에서 다시 확인해 주세요.'; }
@@ -141,7 +206,7 @@ async function homeTimeline() {
   if (error) return;
   list.replaceChildren(...(data || []).map((entry: Entry) => {
     const li = document.createElement('li'), a = document.createElement('a'); a.href = localUrl('/timeline/');
-    a.append(text('time', entry.metadata.period || ''), text('h3', entry.title), text('span', entry.metadata.category || ''));
+    a.append(text('span', entry.metadata.period || '', 'note-date'), text('h3', entry.title), text('span', entry.metadata.category || '', 'note-category'));
     li.append(a); return li;
   }));
 }
