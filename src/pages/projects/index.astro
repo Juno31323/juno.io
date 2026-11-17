@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WorkList from '../../components/WorkList.astro';
-import { getWorks } from '../../lib/works';
-const works = await getWorks();
+import { getWorks, liveWork } from '../../lib/works';
+import { liveContent, publicEntries } from '../../lib/server/public-post';
+const live = import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true';
+const current = live ? await liveContent(Astro.response, () => publicEntries(['projects', 'research'])) : null;
+const works = live ? (current || []).map(liveWork) : await getWorks();
 ---
 <BaseLayout title="만든 것들" description="Firezone, PrintSafe, Chat2B-AU, RunningAppLIFT 등 개발·연구·기획 프로젝트.">
   <header class="page-header"><p class="page-index" lang="en">PROJECT INDEX</p><h1>만든 것들</h1><p class="page-lead">백엔드 · 앱 개발 · RAG 연구</p></header>
-  <section class="project-collection" aria-label="전체 프로젝트"><div class="list-topline"><span>총 {works.length}개</span></div><WorkList works={works} /></section>
+  <section class="project-collection" aria-label="전체 프로젝트">{live && !works.length ? <p>{current ? '공개된 프로젝트가 없습니다.' : '프로젝트를 표시할 수 없습니다. 잠시 후 다시 시도해 주세요.'}</p> : <><div class="list-topline"><span>총 {works.length}개</span></div><WorkList works={works} /></>}</section>
 </BaseLayout>

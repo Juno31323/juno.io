@@ -4,7 +4,7 @@
 
 Vercel 프로젝트의 루트는 저장소의 최상위 폴더다. Astro 프레임워크, Node.js 24, 빌드 명령 `npm run build`를 사용한다. `platform/`은 별도 앱이므로 배포 대상에 넣지 않는다.
 
-Vercel은 시스템 변수 `VERCEL=1`로 확인한다. 홈·프로젝트·연구·블로그 목록 등은 정적 빌드하고, `/blog/<slug>/`와 이전 `/entry/`만 요청 시 실행한다. 기존 GitHub Pages 빌드에는 서버 어댑터를 적용하지 않는다.
+Vercel은 시스템 변수 `VERCEL=1`로 확인한다. 홈·프로젝트·연구·이력·소개·블로그와 이전 `/entry/`는 요청 시 현재 Supabase 공개 데이터로 HTML을 만들어 보낸다. 조회가 실패해도 저장소의 이전 콘텐츠로 대체하지 않는다. 기존 GitHub Pages 빌드에는 서버 어댑터를 적용하지 않는다.
 
 Vercel 프로젝트의 Production과 Preview 환경에 다음 값을 설정한다.
 

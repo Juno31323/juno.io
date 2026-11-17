@@ -2,16 +2,19 @@
 import '../styles/cms.css';
 import '../styles/writing.css';
 import { coverOf, readTime, seriesOf, tagsOf } from '../lib/blog';
-import { dateLabel, localUrl, type Entry } from '../lib/cms';
+import { dateLabel, entryUrl, localUrl, type Entry } from '../lib/cms';
 
-interface Props { entry?: Entry; html?: string; }
-const { entry, html } = Astro.props;
+interface Props { entry?: Entry; html?: string; catalog?: Entry[]; }
+const { entry, html, catalog = [] } = Astro.props;
 const cover = entry ? coverOf(entry) : '';
 const series = entry ? seriesOf(entry) : '';
 const reader = entry ? {
   id: entry.id,
   metadata: { series },
 } : undefined;
+const related = (series ? catalog.filter(post => seriesOf(post) === series) : [...catalog]).reverse();
+const position = entry ? related.findIndex(post => post.id === entry.id) : -1;
+const neighbors = position >= 0 ? [[related[position - 1], '이전 글'], [related[position + 1], '다음 글']] as const : [];
 ---
 <section class="entry-reader" data-entry={!entry ? '' : undefined} data-reader={reader ? JSON.stringify(reader) : undefined}>
   <a class="back-link" href={localUrl('/blog/')} data-entry-back>글 목록으로</a>
@@ -29,12 +32,16 @@ const reader = entry ? {
   <img class="reader-cover" data-entry-cover hidden={!cover} src={cover || undefined} alt={cover ? entry?.metadata.coverAlt || entry?.title : ''} />
   <div class="reader-layout">
     <article class="prose" data-entry-body set:html={html || ''}></article>
-    <aside class="reader-sidebar" hidden>
-      <details open class="reader-toc"><summary>이 글의 목차</summary><nav data-entry-toc aria-label="본문 목차"></nav></details>
-      <section data-series-panel hidden><h2 data-series-title></h2><ol data-series-posts></ol></section>
+    <aside class="reader-sidebar" hidden={!series || !related.length}>
+      <details open class="reader-toc" hidden={!!entry}><summary>이 글의 목차</summary><nav data-entry-toc aria-label="본문 목차"></nav></details>
+      <section data-series-panel hidden={!series || !related.length}><h2 data-series-title>{series}</h2><ol data-series-posts>
+        {series && related.map(post => <li><a href={entryUrl(post)} aria-current={post.id === entry?.id ? 'page' : undefined}>{post.title}</a></li>)}
+      </ol></section>
     </aside>
   </div>
-  <nav class="post-navigation" data-post-navigation hidden aria-label="다른 글"></nav>
+  <nav class="post-navigation" data-post-navigation hidden={!neighbors.some(([post]) => post)} aria-label="다른 글">
+    {neighbors.map(([post, label]) => post && <a href={entryUrl(post)}><span class="cms-help">{label}</span><strong>{post.title}</strong></a>)}
+  </nav>
   <p class="cms-feedback" data-entry-status role="status"></p>
   {!entry && <noscript><p>이 기록을 보려면 JavaScript를 켜 주세요.</p></noscript>}
 </section>

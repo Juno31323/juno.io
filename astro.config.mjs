@@ -7,12 +7,20 @@ const base = (process.env.BASE_PATH || '').replace(/\/$/, '');
 const vercelBuild = process.env.VERCEL === '1';
 const localServer = process.env.PORTFOLIO_SSR === '1';
 const server = vercelBuild || localServer;
+const livePages = new Set([
+  'index', 'about', 'timeline', 'blog/index', 'projects/index', 'projects/[slug]', 'research/index', 'research/[slug]',
+].map(page => `src/pages/${page}.astro`));
 const portfolioRoutes = {
-  name: 'portfolio-blog-routes',
-  hooks: { 'astro:config:setup': ({ injectRoute }) => {
-    injectRoute({ pattern: '/entry', entrypoint: new URL('./src/routes/entry.astro', import.meta.url), prerender: !server });
-    if (server) injectRoute({ pattern: '/blog/[slug]', entrypoint: new URL('./src/routes/blog-post.astro', import.meta.url), prerender: false });
-  } },
+  name: 'portfolio-public-routes',
+  hooks: {
+    'astro:route:setup': ({ route }) => {
+      if (server && livePages.has(route.component)) route.prerender = false;
+    },
+    'astro:config:setup': ({ injectRoute }) => {
+      injectRoute({ pattern: '/entry', entrypoint: new URL('./src/routes/entry.astro', import.meta.url), prerender: !server });
+      if (server) injectRoute({ pattern: '/blog/[slug]', entrypoint: new URL('./src/routes/blog-post.astro', import.meta.url), prerender: false });
+    },
+  },
 };
 // Existing Markdown and public assets use root paths. Keep project Pages URLs portable.
 const portablePaths = {

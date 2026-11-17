@@ -1,9 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
-import WorkLayout from '../../layouts/WorkLayout.astro';
+import WorkDetail from '../../components/WorkDetail.astro';
+import { publicProfile, publicWorkDetail } from '../../lib/server/public-post';
 export async function getStaticPaths() {
   return (await getCollection('research')).map(work => ({ params: { slug: work.id }, props: { work } }));
 }
 const { work } = Astro.props;
+const live = import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true';
+if (live) void publicProfile(Astro.locals);
+const result = live ? await publicWorkDetail(Astro.response, 'research', Astro.params.slug) : null;
 ---
-<WorkLayout work={work} />
+<WorkDetail kind="research" fallback={live ? undefined : work} result={result} />

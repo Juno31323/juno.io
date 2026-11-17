@@ -1,0 +1,96 @@
+---
+import { dateLabel, entryUrl, localUrl, type Entry } from '../lib/cms';
+import { coverOf, readTime, seriesOf, tagsOf } from '../lib/blog';
+
+interface Props { entries: Entry[] | null; }
+const { entries } = Astro.props;
+const posts = entries || [];
+const params = Astro.url.searchParams;
+const q = (params.get('q') || '').trim().slice(0, 100);
+const tag = (params.get('tag') || '').slice(0, 24);
+const series = (params.get('series') || '').slice(0, 80);
+const sort = params.get('sort') === 'oldest' ? 'oldest' : '';
+const view = params.get('view') === 'series' ? 'series' : '';
+const search = q.toLocaleLowerCase();
+const combined = posts.filter(post => (!tag || tagsOf(post).includes(tag)) && (!series || seriesOf(post) === series) &&
+  (!search || [post.title, post.summary, ...tagsOf(post)].join(' ').toLocaleLowerCase().includes(search)));
+if (sort === 'oldest') combined.reverse();
+const pageSize = 12;
+const maxPage = Math.max(1, Math.ceil(combined.length / pageSize));
+const requested = Number(params.get('page'));
+const page = Math.min(Number.isSafeInteger(requested) && requested > 0 ? requested : 1, maxPage);
+const tags = new Map<string, number>();
+const seriesNames = [...new Set(posts.map(seriesOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
+for (const post of posts) for (const key of tagsOf(post)) tags.set(key, (tags.get(key) || 0) + 1);
+const groups = new Map<string, Entry[]>();
+if (view) for (const post of combined) {
+  const name = seriesOf(post);
+  if (name) {
+    const group = groups.get(name);
+    if (group) group.push(post); else groups.set(name, [post]);
+  }
+}
+const blog = localUrl('/blog/');
+const href = (changes: Partial<Record<'q' | 'tag' | 'series' | 'sort' | 'view' | 'page', string>> = {}) => {
+  const state = new URLSearchParams();
+  for (const [name, value] of Object.entries({ q, tag, series, sort, view, page: '', ...changes })) if (value) state.set(name, value);
+  return state.size ? `${blog}?${state}` : blog;
+};
+---
+<section class="blog-content" aria-label="글 목록">
+  {!entries ? <p>글을 표시할 수 없습니다. 잠시 후 다시 시도해 주세요.</p> : <>
+    <form action={blog} method="get" class="blog-toolbar live-blog-toolbar">
+      <div class="blog-tabs" role="group" aria-label="글 보기">
+        <a class="outline-link" href={href({ view: '' })} aria-current={!view ? 'page' : undefined}>모든 글</a>
+        <a class="outline-link" href={href({ view: 'series' })} aria-current={view ? 'page' : undefined}>시리즈</a>
+      </div>
+      {tag && <input type="hidden" name="tag" value={tag} />}
+      {view && <input type="hidden" name="view" value={view} />}
+      <label class="search-field">글 검색<input type="search" name="q" value={q} placeholder="제목, 요약, 태그 검색" maxlength="100" /></label>
+      <label class="search-field">시리즈<select name="series"><option value="">전체 시리즈</option>{seriesNames.map(name => <option value={name} selected={name === series}>{name}</option>)}</select></label>
+      <label class="search-field">정렬<select name="sort"><option value="">최신순</option><option value="oldest" selected={sort === 'oldest'}>오래된순</option></select></label>
+      <button class="outline-link" type="submit">적용</button>
+    </form>
+    <div class="blog-layout">
+      <aside class="blog-filters" aria-label="글 필터">
+        <h2>태그</h2>
+        <div class="tag-filters">
+          <a class="outline-link" href={href({ tag: '' })} aria-current={!tag ? 'true' : undefined}>전체 · {posts.length}</a>
+          {[...tags].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko')).map(([name, count]) => <a class="outline-link" href={href({ tag: name })} aria-current={tag === name ? 'true' : undefined}>{name} · {count}</a>)}
+        </div>
+        <a class="text-link" href={blog}>필터 초기화</a>
+      </aside>
+      <div class="blog-results">
+        <p class="cms-help">{combined.length}개의 글</p>
+        {!combined.length ? <p class="cms-feedback">{posts.length ? '선택한 조건의 글이 없습니다.' : '아직 올린 글이 없습니다.'}</p> : view ?
+          groups.size ? <ul class="series-list">{[...groups].map(([name, group]) => <li><a class="outline-link" href={href({ series: name, view: '' })}><span>{name} · {group.length}개의 글</span></a></li>)}</ul> :
+            <p>아직 묶어 둔 시리즈가 없습니다.</p> :
+          <ul class="blog-list">{combined.slice((page - 1) * pageSize, page * pageSize).map(post => {
+            const cover = coverOf(post);
+            const name = seriesOf(post);
+            return <li><a href={entryUrl(post)}>
+              {cover && <img src={cover} alt={post.metadata.coverAlt || post.title} loading="lazy" width="480" height="270" />}
+              <div class="post-card-copy">
+                <div class="post-card-meta"><time datetime={post.published_at}>{dateLabel(post.published_at)}</time><span>{readTime(post)}</span></div>
+                <h2>{post.title}</h2>{post.summary && <p>{post.summary}</p>}
+                <div class="tag-list">{tagsOf(post).map(label => <span class="tag">{label}</span>)}</div>
+                {name && <span class="post-series">{name}</span>}
+              </div>
+            </a></li>;
+          })}</ul>}
+        {!view && maxPage > 1 && <nav class="blog-pagination" aria-label="글 목록 페이지">
+          {page > 1 && <a class="outline-link" href={href({ page: String(page - 1) })}>이전</a>}
+          <span>{page} / {maxPage}</span>
+          {page < maxPage && <a class="outline-link" href={href({ page: String(page + 1) })}>다음</a>}
+        </nav>}
+      </div>
+    </div>
+  </>}
+</section>
+<style>
+  .live-blog-toolbar { flex-wrap: wrap; gap: 12px; }
+  .live-blog-toolbar .search-field { flex: 1 1 130px; }
+  .blog-tabs [aria-current], .tag-filters [aria-current] { color: white; background: var(--accent); border-color: var(--accent); }
+  .tag-filters .outline-link { padding: 6px 9px; font-size: .8rem; }
+  .blog-pagination { display: flex; gap: 12px; align-items: center; margin-top: 18px; }
+</style>

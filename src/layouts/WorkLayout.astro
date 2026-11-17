@@ -4,10 +4,10 @@ import BaseLayout from './BaseLayout.astro';
 import Arrow from '../components/Arrow.astro';
 import FirezoneFlow from '../components/FirezoneFlow.astro';
 import { workKeywords } from '../lib/work-keywords';
-import type { Work } from '../lib/works';
-interface Props { work: Work; }
-const { work } = Astro.props;
-const { Content } = await render(work);
+import type { Work, WorkCard } from '../lib/works';
+interface Props { work: WorkCard; fallback?: Work; html?: string; }
+const { work, fallback, html } = Astro.props;
+const Content = fallback ? (await render(fallback)).Content : null;
 const isResearch = work.collection === 'research';
 const tags = workKeywords(work.data.listRole, work.id);
 ---
@@ -22,6 +22,6 @@ const tags = workKeywords(work.data.listRole, work.id);
   </header>
   {!isResearch && work.id === 'firezone' && <div class="work-feature"><FirezoneFlow /></div>}
   {work.data.image && <figure class="work-image"><img src={work.data.image.src} alt={work.data.image.alt} /></figure>}
-  <div class="article-layout work-article"><article class="prose"><Content /></article></div>
+  <div class="article-layout work-article">{Content ? <article class="prose"><Content /></article> : <article class="prose" set:html={html || ''} />}</div>
   <div class="detail-end"><a class="text-link" href="/projects/">전체 프로젝트 <Arrow /></a></div>
 </BaseLayout>

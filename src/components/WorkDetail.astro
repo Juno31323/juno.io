@@ -1,0 +1,20 @@
+---
+import WorkLayout from '../layouts/WorkLayout.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { localUrl, type Entry } from '../lib/cms';
+import { liveWork, type Work } from '../lib/works';
+import { renderPost } from '../lib/server/public-post';
+
+interface Props { kind: 'projects' | 'research'; fallback?: Work; result: { entry: Entry | null } | null; }
+const { kind, fallback, result } = Astro.props;
+const title = result ? '공개된 기록이 없습니다.' : '기록을 표시할 수 없습니다.';
+---
+{result?.entry ? <WorkLayout work={liveWork(result.entry)} html={renderPost(result.entry.body)} /> :
+  fallback ? <WorkLayout work={fallback} fallback={fallback} /> :
+  <BaseLayout title={title} noindex>
+    <section class="not-found">
+      <h1>{title}</h1>
+      <p>{result ? '주소를 확인하거나 목록에서 다른 기록을 골라 주세요.' : '잠시 후 다시 시도해 주세요.'}</p>
+      <a class="button-link" href={localUrl(`/${kind}/`)}>목록으로</a>
+    </section>
+  </BaseLayout>}

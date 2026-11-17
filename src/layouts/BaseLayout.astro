@@ -1,11 +1,18 @@
 ---
 import '../styles/global.css';
 import { profile } from '../data/profile';
+import { publicProfile } from '../lib/server/public-post';
 import Arrow from '../components/Arrow.astro';
 import '../styles/dashboard.css';
 interface Props { title?: string; description?: string; noindex?: boolean; canonical?: string; image?: string; }
 const { title, canonical, image, description = '안산대학교 인공지능소프트웨어학과 민준호. 백엔드·앱 프로젝트와 대학 공지 RAG 연구.' } = Astro.props;
-const pageTitle = title ? `${title} — ${profile.name}` : `${profile.name} — 백엔드 · 앱 · RAG`;
+const live = import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true';
+const dynamicProfile = live && !Astro.isPrerendered;
+const current = dynamicProfile ? await publicProfile(Astro.locals) : null;
+const name = current?.name || profile.name;
+const school = current ? [current.school, current.major].filter(Boolean).join(' ') : dynamicProfile ? '' : '안산대학교 인공지능소프트웨어학과';
+const links = current?.github ? [{ url: current.github, label: 'GitHub' }] : dynamicProfile ? [] : profile.links;
+const pageTitle = title ? `${title} — ${name}` : `${name} — 백엔드 · 앱 · RAG`;
 const prefix = import.meta.env.BASE_URL.replace(/\/$/, '');
 const path = prefix && Astro.url.pathname.startsWith(prefix + '/') ? Astro.url.pathname.slice(prefix.length) : Astro.url.pathname;
 const nav = [
@@ -38,7 +45,7 @@ const nav = [
     <a class="skip-link" href="#main">본문으로 건너뛰기</a>
     <div class="site-shell">
       <header class="site-header">
-        <a class="site-brand" href="/"><span class="wordmark">{profile.name}</span><span class="brand-label" lang="en">/ JUNO.IO</span></a>
+        <a class="site-brand" href="/"><span class="wordmark">{name}</span><span class="brand-label" lang="en">/ JUNO.IO</span></a>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" hidden><span class="menu-label">메뉴 열기</span><span class="menu-icon" aria-hidden="true"><i></i><i></i></span></button>
         <nav id="primary-navigation" class="primary-nav" aria-label="주 메뉴">
           {nav.map(item => <a href={item.href} aria-current={(item.href === '/' ? path === '/' : path.startsWith(item.href)) ? 'page' : undefined}>{item.label}</a>)}
@@ -46,9 +53,9 @@ const nav = [
       </header>
       <main id="main" tabindex="-1"><slot /></main>
       <footer class="site-footer">
-        <a class="footer-name" href="/">민준호<span aria-hidden="true">.</span></a>
-        <p>안산대학교<br class="mobile-only" /> 인공지능소프트웨어학과</p>
-        <div class="footer-links">{profile.links.map(link => <a href={link.url} target="_blank" rel="noopener noreferrer">{link.label} <Arrow direction="external" /></a>)}<a href="/admin/">관리</a><a href="#main">맨 위로 <Arrow direction="up" /></a></div>
+        <a class="footer-name" href="/">{name}<span aria-hidden="true">.</span></a>
+        <p>{school}</p>
+        <div class="footer-links">{links.map(link => <a href={link.url} target="_blank" rel="noopener noreferrer">{link.label} <Arrow direction="external" /></a>)}<a href="/admin/">관리</a><a href="#main">맨 위로 <Arrow direction="up" /></a></div>
       </footer>
     </div>
     <script>
@@ -80,6 +87,8 @@ const nav = [
         window.matchMedia('(min-width: 761px)').addEventListener('change', () => setOpen(false));
       }
     </script>
-    <script>import '../scripts/public-content';</script>
+    <script>
+      if (import.meta.env.PUBLIC_BLOG_CLEAN_URLS !== 'true') void import('../scripts/public-content');
+    </script>
   </body>
 </html>

@@ -91,7 +91,7 @@ export async function enhanceReader(entry: Entry | Pick<Entry, 'id' | 'metadata'
     const a = document.createElement('a'); a.href = `#${heading.id}`; a.textContent = heading.textContent; a.dataset.level = heading.tagName;
     a.addEventListener('click', () => { requestAnimationFrame(() => heading.focus({ preventScroll: true })); }); toc.append(a);
   });
-  sidebar.hidden = !headings.length && !name; $('.reader-toc').hidden = !headings.length;
+  sidebar.hidden = !headings.length && $('[data-series-panel]').hidden; $('.reader-toc').hidden = !headings.length;
   if (location.hash) { const target = headings.find(h => `#${h.id}` === location.hash); target?.scrollIntoView(); }
   let observer: IntersectionObserver | undefined;
   if ('IntersectionObserver' in window) {
@@ -108,6 +108,7 @@ export async function enhanceReader(entry: Entry | Pick<Entry, 'id' | 'metadata'
     const button = document.createElement('button'); button.type = 'button'; button.className = 'copy-code'; button.textContent = '코드 복사'; button.addEventListener('click', () => void copy(code.textContent || '', button, '복사됨')); pre.append(button);
   });
   const copyLink = $<HTMLButtonElement>('[data-copy-link]'); copyLink.hidden = false; copyLink.addEventListener('click', () => void copy(location.href, copyLink, '링크 복사됨'));
+  if (!('title' in entry)) return;
   try {
     const posts = await catalog(), related = name ? posts.filter(post => seriesOf(post) === name).reverse() : [...posts].reverse(), index = related.findIndex(post => post.id === entry.id);
     if (name && related.length) {

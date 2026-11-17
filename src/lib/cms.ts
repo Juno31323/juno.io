@@ -24,7 +24,10 @@ const existingRoutes = new Set(['projects/firezone', 'projects/printsafe', 'proj
 export const validSlug = (value: string | null | undefined): value is string => typeof value === 'string' && /^[a-z0-9][a-z0-9-]{0,99}$/.test(value);
 export const blogPostUrl = (slug: string) => localUrl(`/blog/${encodeURIComponent(slug)}/`);
 export const entryUrl = (entry: Pick<Entry, 'kind' | 'slug'>) => {
-  if (entry.kind === 'posts' && import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true' && validSlug(entry.slug)) return blogPostUrl(entry.slug);
+  if (import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true' && validSlug(entry.slug)) {
+    if (entry.kind === 'posts') return blogPostUrl(entry.slug);
+    if (entry.kind === 'projects' || entry.kind === 'research') return localUrl(`/${entry.kind}/${entry.slug}/`);
+  }
   return existingRoutes.has(`${entry.kind}/${entry.slug}`) ? localUrl(`/${entry.kind}/${entry.slug}/`) : localUrl(`/entry/?type=${entry.kind}&slug=${encodeURIComponent(entry.slug)}`);
 };
 export const dateLabel = (value: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(value));
