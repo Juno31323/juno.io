@@ -1,5 +1,7 @@
 # 개인 포트폴리오 Vercel 운영
 
+운영 주소는 `https://juno31323.me`다. Vercel의 `juno-io` 프로젝트는 GitHub의 `Juno31323/juno.io` 저장소에 연결되어 있으며, `main`에 푸시하면 사이트 코드가 배포된다. 관리자 화면에서 글을 발행할 때는 재배포할 필요가 없다.
+
 Vercel 프로젝트의 루트는 저장소의 최상위 폴더다. Astro 프레임워크, Node.js 24, 빌드 명령 `npm run build`를 사용한다. `platform/`은 별도 앱이므로 배포 대상에 넣지 않는다.
 
 Vercel은 시스템 변수 `VERCEL=1`로 확인한다. 홈·프로젝트·연구·블로그 목록 등은 정적 빌드하고, `/blog/<slug>/`와 이전 `/entry/`만 요청 시 실행한다. 기존 GitHub Pages 빌드에는 서버 어댑터를 적용하지 않는다.
