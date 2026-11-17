@@ -45,7 +45,9 @@ export default defineConfig({
   vite: {
     define: { 'import.meta.env.PUBLIC_BLOG_CLEAN_URLS': JSON.stringify(server ? 'true' : 'false') },
     // Bundle the HTML sanitizer with its ESM parser instead of relying on require(ESM) in Vercel's loader.
-    ssr: { noExternal: vercelBuild ? ['sanitize-html', 'htmlparser2'] : [] },
+    ssr: { noExternal: vercelBuild ? [
+      /^(?:sanitize-html|htmlparser2|escape-string-regexp|is-plain-object|launder|parse-srcset|postcss|domelementtype|domhandler|domutils|dom-serializer|entities|dayjs|nanoid|picocolors|source-map-js)(?:\/|$)/,
+    ] : [] },
   },
   trailingSlash: 'always',
   devToolbar: { enabled: false },
