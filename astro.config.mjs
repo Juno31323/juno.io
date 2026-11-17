@@ -42,7 +42,11 @@ export default defineConfig({
   site: process.env.SITE_URL || 'https://juno31323.me',
   base: base || '/',
   integrations: [portfolioRoutes, portablePaths],
-  vite: { define: { 'import.meta.env.PUBLIC_BLOG_CLEAN_URLS': JSON.stringify(server ? 'true' : 'false') } },
+  vite: {
+    define: { 'import.meta.env.PUBLIC_BLOG_CLEAN_URLS': JSON.stringify(server ? 'true' : 'false') },
+    // Bundle the HTML sanitizer with its ESM parser instead of relying on require(ESM) in Vercel's loader.
+    ssr: { noExternal: vercelBuild ? ['sanitize-html', 'htmlparser2'] : [] },
+  },
   trailingSlash: 'always',
   devToolbar: { enabled: false },
 });
