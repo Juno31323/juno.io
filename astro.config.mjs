@@ -1,7 +1,19 @@
 import { defineConfig } from 'astro/config';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
+import vercel from '@astrojs/vercel';
+import node from '@astrojs/node';
 
 const base = (process.env.BASE_PATH || '').replace(/\/$/, '');
+const vercelBuild = process.env.VERCEL === '1';
+const localServer = process.env.PORTFOLIO_SSR === '1';
+const server = vercelBuild || localServer;
+const portfolioRoutes = {
+  name: 'portfolio-blog-routes',
+  hooks: { 'astro:config:setup': ({ injectRoute }) => {
+    injectRoute({ pattern: '/entry', entrypoint: new URL('./src/routes/entry.astro', import.meta.url), prerender: !server });
+    if (server) injectRoute({ pattern: '/blog/[slug]', entrypoint: new URL('./src/routes/blog-post.astro', import.meta.url), prerender: false });
+  } },
+};
 // Existing Markdown and public assets use root paths. Keep project Pages URLs portable.
 const portablePaths = {
   name: 'portable-public-paths',
@@ -25,10 +37,12 @@ const portablePaths = {
 
 export default defineConfig({
   output: 'static',
+  adapter: vercelBuild ? vercel() : localServer ? node({ mode: 'standalone' }) : undefined,
   outDir: process.env.BUILD_OUT_DIR || './dist',
   site: process.env.SITE_URL || 'https://juno31323.me',
   base: base || '/',
-  integrations: [portablePaths],
+  integrations: [portfolioRoutes, portablePaths],
+  vite: { define: { 'import.meta.env.PUBLIC_BLOG_CLEAN_URLS': JSON.stringify(server ? 'true' : 'false') } },
   trailingSlash: 'always',
   devToolbar: { enabled: false },
 });

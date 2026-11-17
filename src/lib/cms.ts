@@ -21,5 +21,10 @@ export function safeUrl(value: unknown): string {
   try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
 }
 const existingRoutes = new Set(['projects/firezone', 'projects/printsafe', 'projects/runningapp-lift', 'projects/ecommerce-lms', 'projects/shared-auth-api', 'research/university-notice-rag']);
-export const entryUrl = (entry: Pick<Entry, 'kind' | 'slug'>) => existingRoutes.has(`${entry.kind}/${entry.slug}`) ? localUrl(`/${entry.kind}/${entry.slug}/`) : localUrl(`/entry/?type=${entry.kind}&slug=${encodeURIComponent(entry.slug)}`);
+export const validSlug = (value: string | null | undefined): value is string => typeof value === 'string' && /^[a-z0-9][a-z0-9-]{0,99}$/.test(value);
+export const blogPostUrl = (slug: string) => localUrl(`/blog/${encodeURIComponent(slug)}/`);
+export const entryUrl = (entry: Pick<Entry, 'kind' | 'slug'>) => {
+  if (entry.kind === 'posts' && import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true' && validSlug(entry.slug)) return blogPostUrl(entry.slug);
+  return existingRoutes.has(`${entry.kind}/${entry.slug}`) ? localUrl(`/${entry.kind}/${entry.slug}/`) : localUrl(`/entry/?type=${entry.kind}&slug=${encodeURIComponent(entry.slug)}`);
+};
 export const dateLabel = (value: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(value));

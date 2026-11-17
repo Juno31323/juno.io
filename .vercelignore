@@ -1,0 +1,12 @@
+.env
+.env.*
+.vercel
+.astro
+dist
+dist-pages
+dist-redirects
+artifacts
+platform
+supabase/.temp
+.agents
+.impeccable

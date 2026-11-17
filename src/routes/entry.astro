@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import EntryReader from '../components/EntryReader.astro';
+import { blogPostUrl, validSlug } from '../lib/cms';
+const kind = Astro.url.searchParams.get('type') || 'posts';
+const slug = Astro.url.searchParams.get('slug');
+if (import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true' && kind === 'posts' && validSlug(slug)) {
+  return Astro.redirect(blogPostUrl(slug), 308);
+}
+---
+<BaseLayout title="기록" description="민준호의 글과 작업 기록." noindex>
+  <EntryReader />
+</BaseLayout>

@@ -1,0 +1,46 @@
+---
+import '../styles/cms.css';
+import '../styles/writing.css';
+import { coverOf, readTime, seriesOf, tagsOf } from '../lib/blog';
+import { dateLabel, localUrl, type Entry } from '../lib/cms';
+
+interface Props { entry?: Entry; html?: string; }
+const { entry, html } = Astro.props;
+const cover = entry ? coverOf(entry) : '';
+const series = entry ? seriesOf(entry) : '';
+const reader = entry ? {
+  id: entry.id,
+  metadata: { series },
+} : undefined;
+---
+<section class="entry-reader" data-entry={!entry ? '' : undefined} data-reader={reader ? JSON.stringify(reader) : undefined}>
+  <a class="back-link" href={localUrl('/blog/')} data-entry-back>글 목록으로</a>
+  <header class="detail-header">
+    <div data-entry-series-label>{series && <a class="series-label" href={`${localUrl('/blog/')}?series=${encodeURIComponent(series)}`}>{series}</a>}</div>
+    <h1 data-entry-title>{entry?.title || '기록을 불러오는 중입니다.'}</h1>
+    <p class="detail-summary" data-entry-summary>{entry?.summary}</p>
+    <div class="reader-meta">
+      <p class="entry-date" data-entry-date>{entry && dateLabel(entry.published_at)}</p>
+      <span data-reading-time>{entry && readTime(entry)}</span>
+      <button type="button" class="copy-link" data-copy-link hidden>링크 복사</button>
+    </div>
+    <div class="tag-list" data-entry-tags>{entry && tagsOf(entry).map(tag => <a class="tag" href={`${localUrl('/blog/')}?tag=${encodeURIComponent(tag)}`}>{tag}</a>)}</div>
+  </header>
+  <img class="reader-cover" data-entry-cover hidden={!cover} src={cover || undefined} alt={cover ? entry?.metadata.coverAlt || entry?.title : ''} />
+  <div class="reader-layout">
+    <article class="prose" data-entry-body set:html={html || ''}></article>
+    <aside class="reader-sidebar" hidden>
+      <details open class="reader-toc"><summary>이 글의 목차</summary><nav data-entry-toc aria-label="본문 목차"></nav></details>
+      <section data-series-panel hidden><h2 data-series-title></h2><ol data-series-posts></ol></section>
+    </aside>
+  </div>
+  <nav class="post-navigation" data-post-navigation hidden aria-label="다른 글"></nav>
+  <p class="cms-feedback" data-entry-status role="status"></p>
+  {!entry && <noscript><p>이 기록을 보려면 JavaScript를 켜 주세요.</p></noscript>}
+</section>
+
+<script>
+  import { enhanceReader } from '../scripts/blog-content';
+  const reader = document.querySelector<HTMLElement>('[data-reader]');
+  if (reader?.dataset.reader) void enhanceReader(JSON.parse(reader.dataset.reader), reader);
+</script>

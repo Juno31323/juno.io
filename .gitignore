@@ -1,4 +1,5 @@
 node_modules/
+.vercel/
 dist/
 dist-pages/
 .astro/
@@ -34,3 +35,6 @@ public/images/**/*.json
 **/.impeccable/live/sessions/
 **/.impeccable/live/previews/
 **/.impeccable/live/cache/
+
+.vercel
+.env*

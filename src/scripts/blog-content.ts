@@ -75,15 +75,16 @@ export async function setupBlog() {
   more.addEventListener('click', () => { if (!loaded) void load(); else { limit += 12; render(); } }); await load();
 }
 
-export async function enhanceReader(entry: Entry, container: Element) {
+export async function enhanceReader(entry: Entry | Pick<Entry, 'id' | 'metadata'>, container: Element) {
   const $ = <T extends HTMLElement>(selector: string) => container.querySelector<T>(selector)!;
   const body = $('[data-entry-body]'), toc = $('[data-entry-toc]'), sidebar = $('.reader-sidebar');
-  $('[data-reading-time]').textContent = readTime(entry);
-  const tags = $('[data-entry-tags]');
-  tags.replaceChildren(...tagsOf(entry).map(tag => { const a = text('a', tag, 'tag') as HTMLAnchorElement; a.href = `${localUrl('/blog/')}?tag=${encodeURIComponent(tag)}`; return a; }));
   const name = seriesOf(entry), label = $('[data-entry-series-label]');
-  if (name) { const a = text('a', name, 'series-label') as HTMLAnchorElement; a.href = `${localUrl('/blog/')}?series=${encodeURIComponent(name)}`; label.append(a); }
-  const cover = $<HTMLImageElement>('[data-entry-cover]'), url = coverOf(entry); if (url) { cover.src = url; cover.alt = entry.metadata.coverAlt || entry.title; cover.hidden = false; }
+  if ('title' in entry) {
+    $('[data-reading-time]').textContent = readTime(entry);
+    $('[data-entry-tags]').replaceChildren(...tagsOf(entry).map(tag => { const a = text('a', tag, 'tag') as HTMLAnchorElement; a.href = `${localUrl('/blog/')}?tag=${encodeURIComponent(tag)}`; return a; }));
+    if (name) { const a = text('a', name, 'series-label') as HTMLAnchorElement; a.href = `${localUrl('/blog/')}?series=${encodeURIComponent(name)}`; label.append(a); }
+    const cover = $<HTMLImageElement>('[data-entry-cover]'), url = coverOf(entry); if (url) { cover.src = url; cover.alt = entry.metadata.coverAlt || entry.title; cover.hidden = false; }
+  }
   const headings = Array.from(body.querySelectorAll<HTMLHeadingElement>('h2, h3'));
   headings.forEach((heading, index) => {
     heading.id = `section-${index + 1}`; heading.tabIndex = -1;
