@@ -18,7 +18,10 @@ const portfolioRoutes = {
     },
     'astro:config:setup': ({ injectRoute }) => {
       injectRoute({ pattern: '/entry', entrypoint: new URL('./src/routes/entry.astro', import.meta.url), prerender: !server });
-      if (server) injectRoute({ pattern: '/blog/[slug]', entrypoint: new URL('./src/routes/blog-post.astro', import.meta.url), prerender: false });
+      if (server) {
+        injectRoute({ pattern: '/blog/[slug]', entrypoint: new URL('./src/routes/blog-post.astro', import.meta.url), prerender: false });
+        injectRoute({ pattern: '/api/blog/[number]/view', entrypoint: new URL('./src/routes/blog-view.ts', import.meta.url), prerender: false });
+      }
     },
   },
 };

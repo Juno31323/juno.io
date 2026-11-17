@@ -1,6 +1,6 @@
 ---
 import { dateLabel, entryUrl, localUrl, type Entry } from '../lib/cms';
-import { coverOf, readTime, seriesOf, tagsOf } from '../lib/blog';
+import { coverOf, seriesOf, tagsOf } from '../lib/blog';
 
 interface Props { entries: Entry[] | null; }
 const { entries } = Astro.props;
@@ -71,7 +71,7 @@ const href = (changes: Partial<Record<'q' | 'tag' | 'series' | 'sort' | 'view' |
             return <li><a href={entryUrl(post)}>
               {cover && <img src={cover} alt={post.metadata.coverAlt || post.title} loading="lazy" width="480" height="270" />}
               <div class="post-card-copy">
-                <div class="post-card-meta"><time datetime={post.published_at}>{dateLabel(post.published_at)}</time><span>{readTime(post)}</span></div>
+                <div class="post-card-meta"><time datetime={post.published_at}>{dateLabel(post.published_at)}</time>{post.blog_number && <span>조회 {(post.blog_view_counts?.total ?? 0).toLocaleString('ko-KR')}회</span>}</div>
                 <h2>{post.title}</h2>{post.summary && <p>{post.summary}</p>}
                 <div class="tag-list">{tagsOf(post).map(label => <span class="tag">{label}</span>)}</div>
                 {name && <span class="post-series">{name}</span>}

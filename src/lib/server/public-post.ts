@@ -1,8 +1,13 @@
 import { marked } from 'marked';
 import sanitize from 'sanitize-html';
-import { safeUrl, validSlug, type Entry, type EntryKind } from '../cms';
+import { parseBlogNumber, safeUrl, validSlug, type Entry, type EntryKind } from '../cms';
 import { profile as brand } from '../../data/profile';
 
+class PublicQueryError extends Error {
+  constructor(readonly code: string | undefined, status: number) {
+    super(`Public content lookup failed (${status}).`);
+  }
+}
 async function queryPublic<T>(table: 'entries' | 'site_settings', params: Record<string, string>): Promise<T[]> {
   const project = import.meta.env.PUBLIC_SUPABASE_URL;
   const key = import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -10,24 +15,41 @@ async function queryPublic<T>(table: 'entries' | 'site_settings', params: Record
   const url = new URL(`/rest/v1/${table}`, project);
   url.search = new URLSearchParams(params).toString();
   const response = await fetch(url, { headers: { apikey: key }, signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error(`Public content lookup failed (${response.status}).`);
+  if (!response.ok) {
+    const failure = await response.json().catch(() => ({}));
+    throw new PublicQueryError(failure.code, response.status);
+  }
   return await response.json() as T[];
 }
 
-export async function publicEntries(kinds: EntryKind[], options: { slug?: string; limit?: number; featured?: boolean; body?: boolean } = {}) {
+export async function publicEntries(kinds: EntryKind[], options: { slug?: string; number?: number; limit?: number; featured?: boolean; body?: boolean } = {}) {
+  const posts = kinds.length === 1 && kinds[0] === 'posts';
+  const columns = 'id,kind,slug,title,summary,status,published_at,sort_order,featured,metadata' + (options.body ? ',body' : '');
   const params: Record<string, string> = {
-    select: 'id,kind,slug,title,summary,status,published_at,sort_order,featured,metadata' + (options.body ? ',body' : ''),
+    select: columns + (posts ? ',blog_number,blog_view_counts(total)' : ''),
     kind: kinds.length === 1 ? `eq.${kinds[0]}` : `in.(${kinds.join(',')})`,
     status: 'eq.published',
     published_at: `lte.${new Date().toISOString()}`,
-    order: kinds.length === 1 && kinds[0] === 'posts' ? 'published_at.desc,id.asc' : 'sort_order.asc,id.asc',
+    order: posts ? 'published_at.desc,id.asc' : 'sort_order.asc,id.asc',
   };
   if (options.slug) params.slug = `eq.${options.slug}`;
+  if (options.number) params.blog_number = `eq.${options.number}`;
   if (options.featured) params.featured = 'eq.true';
-  if (options.limit) return queryPublic<Entry>('entries', { ...params, limit: String(options.limit) });
+  const getPage = async (paging: Record<string, string>) => {
+    try {
+      return await queryPublic<Entry>('entries', { ...params, ...paging });
+    } catch (error) {
+      // Keep existing slug links working until the database migration is installed.
+      if (!(posts && error instanceof PublicQueryError && ['42703', 'PGRST200', 'PGRST204'].includes(error.code || ''))) throw error;
+      if (options.number) return [];
+      params.select = columns;
+      return queryPublic<Entry>('entries', { ...params, ...paging });
+    }
+  };
+  if (options.limit) return getPage({ limit: String(options.limit) });
   const entries: Entry[] = [];
   for (let offset = 0; ; offset += 500) {
-    const page = await queryPublic<Entry>('entries', { ...params, limit: '500', offset: String(offset) });
+    const page = await getPage({ limit: '500', offset: String(offset) });
     entries.push(...page);
     if (page.length < 500) return entries;
   }
@@ -38,7 +60,14 @@ export async function findPublicEntry(kind: EntryKind, slug: string | undefined)
   const [entry] = await publicEntries([kind], { slug, limit: 1, body: true });
   return entry ?? null;
 }
-export const findPublicPost = (slug: string | undefined) => findPublicEntry('posts', slug);
+export async function findPublicPost(address: string | undefined) {
+  const number = parseBlogNumber(address);
+  if (number !== null) {
+    const [post] = await publicEntries(['posts'], { number, limit: 1, body: true });
+    if (post) return post;
+  }
+  return findPublicEntry('posts', address);
+}
 
 export type LiveProfile = {
   name: string; school: string; major: string; intro: string;

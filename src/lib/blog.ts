@@ -5,9 +5,3 @@ export function tagsOf(entry: Entry): string[] {
 }
 export const seriesOf = (entry: Pick<Entry, 'metadata'>): string => typeof entry.metadata.series === 'string' ? entry.metadata.series.trim().slice(0, 80) : '';
 export const coverOf = (entry: Entry) => safeUrl(entry.metadata.coverImage);
-export const readingMinutes = (body: string) => Math.max(1, Math.ceil(body.replace(/<[^>]*>|[#*`>\[\]()-]/g, '').length / 500));
-export function readTime(entry: Entry) {
-  const stored = Number(entry.metadata.readingMinutes);
-  const minutes = Number.isFinite(stored) && stored > 0 ? Math.min(400, Math.ceil(stored)) : typeof entry.body === 'string' ? readingMinutes(entry.body) : 0;
-  return minutes ? `약 ${minutes}분 읽기` : '';
-}

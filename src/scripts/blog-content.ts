@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { type Entry, entryUrl, localUrl, dateLabel } from '../lib/cms';
-import { tagsOf, seriesOf, coverOf, readTime } from '../lib/blog';
+import { tagsOf, seriesOf, coverOf } from '../lib/blog';
 
 const text = (tag: string, value: string, className = '') => { const el = document.createElement(tag); el.textContent = value; el.className = className; return el; };
 async function catalog(): Promise<Entry[]> {
@@ -35,7 +35,7 @@ export async function setupBlog() {
       const li = document.createElement('li'), a = document.createElement('a'), content = text('div', '', 'post-card-copy'); a.href = entryUrl(entry);
       const cover = coverOf(entry); if (cover) { const img = document.createElement('img'); img.src = cover; img.alt = typeof entry.metadata.coverAlt === 'string' ? entry.metadata.coverAlt : entry.title; img.loading = 'lazy'; img.width = 480; img.height = 270; a.append(img); }
       const time = document.createElement('time'); time.dateTime = entry.published_at; time.textContent = dateLabel(entry.published_at);
-      const meta = text('div', '', 'post-card-meta'); meta.append(time, text('span', readTime(entry)));
+      const meta = text('div', '', 'post-card-meta'); meta.append(time);
       content.append(meta, text('h2', entry.title)); if (entry.summary) content.append(text('p', entry.summary));
       const tags = text('div', '', 'tag-list'); tagsOf(entry).forEach(tag => tags.append(text('span', tag, 'tag'))); content.append(tags);
       const seriesName = seriesOf(entry); if (seriesName) content.append(text('span', seriesName, 'post-series'));
@@ -80,7 +80,6 @@ export async function enhanceReader(entry: Entry | Pick<Entry, 'id' | 'metadata'
   const body = $('[data-entry-body]'), toc = $('[data-entry-toc]'), sidebar = $('.reader-sidebar');
   const name = seriesOf(entry), label = $('[data-entry-series-label]');
   if ('title' in entry) {
-    $('[data-reading-time]').textContent = readTime(entry);
     $('[data-entry-tags]').replaceChildren(...tagsOf(entry).map(tag => { const a = text('a', tag, 'tag') as HTMLAnchorElement; a.href = `${localUrl('/blog/')}?tag=${encodeURIComponent(tag)}`; return a; }));
     if (name) { const a = text('a', name, 'series-label') as HTMLAnchorElement; a.href = `${localUrl('/blog/')}?series=${encodeURIComponent(name)}`; label.append(a); }
     const cover = $<HTMLImageElement>('[data-entry-cover]'), url = coverOf(entry); if (url) { cover.src = url; cover.alt = entry.metadata.coverAlt || entry.title; cover.hidden = false; }

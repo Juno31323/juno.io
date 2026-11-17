@@ -1,18 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import EntryReader from '../components/EntryReader.astro';
-import { blogPostUrl, entryUrl, localUrl, validSlug } from '../lib/cms';
+import { entryUrl, localUrl, validSlug } from '../lib/cms';
 import { findPublicEntry, liveContent, renderPost } from '../lib/server/public-post';
 const kind = Astro.url.searchParams.get('type') || 'posts';
 const slug = Astro.url.searchParams.get('slug');
 const live = import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true';
 if (live && validSlug(slug)) {
-  if (kind === 'posts') return Astro.redirect(blogPostUrl(slug), 308);
   if (kind === 'projects' || kind === 'research') return Astro.redirect(entryUrl({ kind, slug }), 308);
 }
 const result = live ? await liveContent(Astro.response, async () => ({
-  entry: validSlug(slug) && (kind === 'timeline' || kind === 'pages') ? await findPublicEntry(kind, slug) : null,
+  entry: validSlug(slug) && (kind === 'posts' || kind === 'timeline' || kind === 'pages') ? await findPublicEntry(kind, slug) : null,
 })) : null;
+if (result?.entry?.kind === 'posts') return Astro.redirect(entryUrl(result.entry), 308);
 if (result && !result.entry) Astro.response.status = 404;
 const title = result?.entry?.title || (live ? (result ? '공개된 기록이 없습니다.' : '기록을 표시할 수 없습니다.') : '기록');
 ---

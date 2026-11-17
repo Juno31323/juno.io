@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { type Entry, type EntryKind, entryUrl, safeUrl } from '../lib/cms';
-import { readingMinutes, tagsOf, seriesOf } from '../lib/blog';
+import { tagsOf, seriesOf } from '../lib/blog';
 import { createWriter } from './writer';
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -29,6 +29,10 @@ function openEntry(entry: Entry | null) {
   input('published_at').value = localDate(entry?.published_at || new Date().toISOString());
   input('slug').readOnly = Boolean(entry?.id);
   if (!entry) input('slug').value = `post-${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
+  const numbered = kind === 'posts' && import.meta.env.PUBLIC_BLOG_CLEAN_URLS === 'true';
+  $('#slug-field').hidden = numbered;
+  $('#blog-number').hidden = !numbered;
+  $('#blog-number').textContent = entry?.blog_number ? `글 주소: /blog/${entry.blog_number}/` : '공개할 때 글 주소 번호가 자동으로 정해집니다.';
   input('tags').value = entry ? tagsOf(entry).join(', ') : '';
   input('series').value = entry ? seriesOf(entry) : '';
   for (const name of ['coverImage', 'coverAlt']) input(name).value = typeof entry?.metadata[name] === 'string' ? entry.metadata[name] : '';
@@ -135,7 +139,7 @@ form.addEventListener('submit', async event => {
     status: input('status').value as Entry['status'], published_at: new Date(input('published_at').value).toISOString(),
     sort_order: Number(input('sort_order').value), featured: input('featured').checked,
     metadata: { ...current?.metadata, category: input('category').value, period: input('period').value, role: input('role').value, status: input('work_status').value, cardImage: input('cardImage').value, cardAlt: input('cardAlt').value, links,
-      ...(kind === 'posts' ? { tags, series: input('series').value.trim(), coverImage: input('coverImage').value.trim(), coverAlt: input('coverAlt').value.trim(), readingMinutes: readingMinutes(input('body').value) } : {}),
+      ...(kind === 'posts' ? { tags, series: input('series').value.trim(), coverImage: input('coverImage').value.trim(), coverAlt: input('coverAlt').value.trim() } : {}),
     },
   };
   if (!payload.title) { say('제목을 입력해 주세요.', true); return; }

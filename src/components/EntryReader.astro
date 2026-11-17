@@ -1,7 +1,7 @@
 ---
 import '../styles/cms.css';
 import '../styles/writing.css';
-import { coverOf, readTime, seriesOf, tagsOf } from '../lib/blog';
+import { coverOf, seriesOf, tagsOf } from '../lib/blog';
 import { dateLabel, entryUrl, localUrl, type Entry } from '../lib/cms';
 
 interface Props { entry?: Entry; html?: string; catalog?: Entry[]; }
@@ -24,7 +24,7 @@ const neighbors = position >= 0 ? [[related[position - 1], '이전 글'], [relat
     <p class="detail-summary" data-entry-summary>{entry?.summary}</p>
     <div class="reader-meta">
       <p class="entry-date" data-entry-date>{entry && dateLabel(entry.published_at)}</p>
-      <span data-reading-time>{entry && readTime(entry)}</span>
+      {entry?.blog_number && <span data-view-url={localUrl(`/api/blog/${entry.blog_number}/view/`)}>조회 <span data-view-count>{(entry.blog_view_counts?.total ?? 0).toLocaleString('ko-KR')}</span>회</span>}
       <button type="button" class="copy-link" data-copy-link hidden>링크 복사</button>
     </div>
     <div class="tag-list" data-entry-tags>{entry && tagsOf(entry).map(tag => <a class="tag" href={`${localUrl('/blog/')}?tag=${encodeURIComponent(tag)}`}>{tag}</a>)}</div>
@@ -50,4 +50,27 @@ const neighbors = position >= 0 ? [[related[position - 1], '이전 글'], [relat
   import { enhanceReader } from '../scripts/blog-content';
   const reader = document.querySelector<HTMLElement>('[data-reader]');
   if (reader?.dataset.reader) void enhanceReader(JSON.parse(reader.dataset.reader), reader);
+  const view = reader?.querySelector<HTMLElement>('[data-view-url]');
+  const url = view?.dataset.viewUrl;
+  const count = view?.querySelector('[data-view-count]');
+  if (url && count) {
+    const register = async () => {
+      try {
+        const result = await fetch(url, { method: 'POST', credentials: 'same-origin', keepalive: true });
+        if (result.ok) {
+          const { count: next } = await result.json();
+          if (Number.isSafeInteger(next) && next >= 0) count.textContent = next.toLocaleString('ko-KR');
+        }
+      } catch { /* Leave the last published total visible. */ }
+    };
+    const visible = () => {
+      if (document.visibilityState !== 'visible') return;
+      document.removeEventListener('visibilitychange', visible);
+      // Serialize first visits across tabs before the first response sets the cookie.
+      if (navigator.locks) void navigator.locks.request('juno-blog-visitor', register).catch(() => {});
+      else void register();
+    };
+    document.addEventListener('visibilitychange', visible);
+    visible();
+  }
 </script>

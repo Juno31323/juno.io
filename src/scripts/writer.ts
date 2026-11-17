@@ -1,5 +1,4 @@
 import { type Entry, type EntryKind, safeUrl } from '../lib/cms';
-import { readingMinutes } from '../lib/blog';
 import { markdown } from '../lib/markdown';
 
 type Draft = { savedAt: string; version?: string; values: Record<string, string | boolean> };
@@ -33,7 +32,7 @@ export function createWriter(form: HTMLFormElement, changed: () => void, message
     } catch { $('#local-save-status').textContent = '기기 보관 불가 · 저장 버튼을 눌러 주세요'; }
   }
   function refresh() {
-    $('#writing-count').textContent = `${body.value.length.toLocaleString('ko-KR')}자 · 약 ${readingMinutes(body.value)}분`;
+    $('#writing-count').textContent = `${body.value.length.toLocaleString('ko-KR')}자`;
     if (mode !== 'edit') $('#body-preview').innerHTML = markdown(body.value) || '<p class="cms-help">작성한 내용이 여기에 표시됩니다.</p>';
     const tags = [...new Set(field('tags').value.split(',').map(t => t.trim()).filter(Boolean))].slice(0, 8);
     $('#editor-tags').replaceChildren(...tags.map(tag => { const span = document.createElement('span'); span.className = 'tag'; span.textContent = tag; return span; }));

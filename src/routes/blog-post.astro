@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import EntryReader from '../components/EntryReader.astro';
-import { blogPostUrl, localUrl } from '../lib/cms';
+import { entryUrl, localUrl } from '../lib/cms';
 import { coverOf } from '../lib/blog';
 import { findPublicPost, publicEntries, publicProfile, renderPost } from '../lib/server/public-post';
 
@@ -12,12 +12,13 @@ const post = await findPublicPost(Astro.params.slug).catch(() => {
   unavailable = true;
   return null;
 });
+if (post?.blog_number && String(post.blog_number) !== Astro.params.slug) return Astro.redirect(entryUrl(post), 308);
 if (!post) {
   Astro.response.status = unavailable ? 503 : 404;
   if (unavailable) Astro.response.headers.set('Retry-After', '30');
 }
 const title = post?.title || (unavailable ? '글을 불러오지 못했습니다.' : '공개된 글이 없습니다.');
-const canonical = post ? new URL(blogPostUrl(post.slug), Astro.site || Astro.url).href : undefined;
+const canonical = post ? new URL(entryUrl(post), Astro.site || Astro.url).href : undefined;
 const cover = post && coverOf(post);
 const catalog = post ? await publicEntries(['posts']).catch(() => []) : [];
 ---
